@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Parking</title>
+</head>
+<body>
+
+<h1>Smart Parking System</h1>
+
+<h3>Register</h3>
+<input id="regUser" placeholder="Username">
+<input id="regPass" type="password" placeholder="Password">
+<button onclick="registerUser()">Register</button>
+
+<h3>Login</h3>
+<input id="logUser" placeholder="Username">
+<input id="logPass" type="password" placeholder="Password">
+<button onclick="loginUser()">Login</button>
+
+<h3>Slots</h3>
+<button onclick="getSlots()">Load Slots</button>
+<ul id="slots"></ul>
+
+<script>
+let token = "";
+
+async function registerUser() {
+  await fetch("/auth/register", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: document.getElementById("regUser").value,
+      password: document.getElementById("regPass").value
+    })
+  });
+  alert("Registered!");
+}
+
+async function loginUser() {
+  const res = await fetch("/auth/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: document.getElementById("logUser").value,
+      password: document.getElementById("logPass").value
+    })
+  });
+  const data = await res.json();
+  token = data.token || "";
+  alert(token ? "Logged in!" : "Login failed");
+}
+
+async function getSlots() {
+  const res = await fetch("/slots");
+  const data = await res.json();
+
+  const list = document.getElementById("slots");
+  list.innerHTML = "";
+
+  data.forEach(slot => {
+    const li = document.createElement("li");
+    li.innerText = slot.location + " - " + slot.status;
+
+    const btn = document.createElement("button");
+    btn.innerText = "Book";
+    btn.onclick = () => book(slot.id);
+
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
+
+async function book(id) {
+  await fetch("/book", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": token
+    },
+    body: JSON.stringify({ id })
+  });
+  getSlots();
+}
+</script>
+
+</body>
+</html>
