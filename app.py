@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, send_from_directory
 from sqlalchemy import create_engine, Column, Integer, String, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from flask_bcrypt import Bcrypt
@@ -255,6 +255,11 @@ def health():
 @app.route("/app", methods=["GET"])
 def frontend():
     return send_file("index.html")
+
+
+@app.route("/styles.css", methods=["GET"])
+def styles():
+    return send_from_directory(".", "styles.css")
 
 
 @app.route("/", methods=["GET"])
