@@ -119,17 +119,8 @@ def get_slots():
     return jsonify(result)
 
 
-@app.route("/add-slot", methods=["GET", "POST"])
+@app.route("/add-slot", methods=["POST"])
 def add_slot():
-    if request.method == "GET":
-        return jsonify(
-            {
-                "message": "Use POST /add-slot with JSON body",
-                "example": {"location": "Accra Mall"},
-                "auth": "Authorization: Bearer <token>",
-            }
-        )
-
     _, auth_error = _require_auth_user_id()
     if auth_error:
         return auth_error
@@ -144,17 +135,8 @@ def add_slot():
     return jsonify({"message": "Slot added"}), 201
 
 
-@app.route("/book", methods=["GET", "POST"])
+@app.route("/book", methods=["POST"])
 def book_slot():
-    if request.method == "GET":
-        return jsonify(
-            {
-                "message": "Use POST /book with JSON body",
-                "example": {"id": 1},
-                "auth": "Authorization: Bearer <token>",
-            }
-        )
-
     _, auth_error = _require_auth_user_id()
     if auth_error:
         return auth_error
@@ -174,17 +156,8 @@ def book_slot():
     return jsonify({"message": "Slot not available"}), 400
 
 
-@app.route("/release-slot", methods=["GET", "POST"])
+@app.route("/release-slot", methods=["POST"])
 def release_slot():
-    if request.method == "GET":
-        return jsonify(
-            {
-                "message": "Use POST /release-slot with JSON body",
-                "example": {"id": 1},
-                "auth": "Authorization: Bearer <token>",
-            }
-        )
-
     _, auth_error = _require_auth_user_id()
     if auth_error:
         return auth_error
@@ -204,13 +177,20 @@ def release_slot():
     return jsonify({"message": "Slot not found"}), 404
 
 
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
+
+
 @app.route("/", methods=["GET"])
 def home():
     return jsonify(
         {
             "message": "Smart Parking System API",
+            "status": "running",
+            "version": "1.0",
             "routes": {
-                "GET": ["/", "/slots", "/add-slot", "/book", "/release-slot"],
+                "GET": ["/", "/slots"],
                 "POST": ["/auth/register", "/auth/login", "/add-slot", "/book", "/release-slot"],
             },
         }
