@@ -5,68 +5,214 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smart Parking</title>
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
 
 <div class="container">
 
   <div class="header">
-    <h1>Smart Parking Control Panel</h1>
-    <p>Manage parking slots in real-time</p>
+    <div class="header-top">
+      <div>
+        <h1>Smart Parking</h1>
+        <p>Find and book parking in Accra</p>
+      </div>
+      <div id="walletBadge" style="display:none;text-align:right">
+        <div style="font-size:12px;opacity:0.8">Wallet Balance</div>
+        <div id="balanceDisplay" style="font-size:24px;font-weight:bold">GHS 0.00</div>
+      </div>
+    </div>
   </div>
 
   <p id="status"></p>
 
-  <div class="card">
-    <h3>Register</h3>
-    <input id="regUser" placeholder="Username">
-    <input id="regPass" type="password" placeholder="Password">
-    <button onclick="registerUser()">Register</button>
-  </div>
+  <div class="grid">
+    <div class="card">
+      <h3>Register</h3>
+      <input id="regUser" placeholder="Username">
+      <input id="regPass" type="password" placeholder="Password">
+      <button onclick="registerUser()">Register</button>
+    </div>
 
-  <div class="card">
-    <h3>Login</h3>
-    <input id="logUser" placeholder="Username">
-    <input id="logPass" type="password" placeholder="Password">
-    <button onclick="loginUser()">Login</button>
+    <div class="card">
+      <h3>Login</h3>
+      <input id="logUser" placeholder="Username">
+      <input id="logPass" type="password" placeholder="Password">
+      <button onclick="loginUser()">Login</button>
+    </div>
   </div>
 
   <div class="card">
     <h3>Parking Slots</h3>
-    <button onclick="getSlots()">Load Slots</button>
+    <button onclick="getSlots()" style="width:auto;padding:8px 16px;margin-bottom:12px">Refresh</button>
     <ul id="slots"></ul>
+  </div>
+
+  <div class="card">
+    <h3>Map View</h3>
+    <div id="map"></div>
+  </div>
+
+  <div class="card" id="walletCard">
+    <h3>💳 Top Up Wallet</h3>
+    <p style="color:#94a3b8;font-size:14px;margin-top:0">Pay via MTN MoMo, Vodafone Cash, or AirtelTigo Money — funds appear instantly.</p>
+
+    <!-- Step 1: Mobile Money Details -->
+    <fieldset id="momoStep1" style="border:1px solid #334155;border-radius:8px;padding:14px;margin:0">
+      <legend style="color:#94a3b8;font-size:12px;padding:0 8px;font-weight:700">MOBILE MONEY PAYMENT</legend>
+      <input id="momoPhone" placeholder="Phone number (e.g. 0551234567)" maxlength="10">
+      <select id="momoProvider" style="width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#0f172a;color:white;font-size:14px">
+        <option value="mtn">MTN MoMo</option>
+        <option value="vod">Vodafone Cash</option>
+        <option value="tgo">AirtelTigo Money</option>
+      </select>
+      <input id="momoAmount" type="number" placeholder="Amount in GHS (min GHS 1)" min="1" max="1000">
+      <button onclick="initiateMoMo()" style="background:linear-gradient(135deg,#22c55e,#0ea5e9)">Pay with Mobile Money</button>
+    </fieldset>
+
+    <!-- Step 2: OTP Entry (shown after initiation) -->
+    <fieldset id="momoStep2" style="display:none;border:1px solid #f59e0b;border-radius:8px;padding:14px;margin:12px 0 0">
+      <legend style="color:#f59e0b;font-size:12px;padding:0 8px;font-weight:700">ENTER OTP FROM PHONE</legend>
+      <input id="momoOtp" placeholder="OTP code sent to your phone" maxlength="6" style="letter-spacing:4px;font-size:18px;text-align:center">
+      <input id="momoRef" type="hidden">
+      <div class="btn-row">
+        <button onclick="submitMoMoOtp()" style="background:#f59e0b;color:#000">Confirm Payment</button>
+        <button onclick="document.getElementById('momoStep2').style.display='none'" style="background:#334155;width:auto;padding:10px 16px">Cancel</button>
+      </div>
+    </fieldset>
+
+    <!-- Demo top-up (no real payment, for testing) -->
+    <div style="margin-top:14px;border-top:1px solid #334155;padding-top:12px">
+      <p style="color:#64748b;font-size:12px;margin:0 0 6px">⚠️ Demo top-up (no real payment, for testing only):</p>
+      <div class="btn-row">
+        <input id="topUpAmount" type="number" placeholder="Amount (GHS)" min="1" max="500" style="flex:1">
+        <button onclick="topUp()" style="width:auto;flex:0 0 auto;padding:10px 16px;background:#334155">+ Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="myBookingsCard">
+    <h3>My Bookings</h3>
+    <ul id="myBookingsList" style="list-style:none;padding:0"></ul>
+  </div>
+
+  <div class="card" id="addSpotCard">
+    <h3>Add a Parking Spot</h3>
+    <p style="color:#94a3b8;font-size:14px;margin-top:0">Logged-in users can submit new spots.</p>
+    <input id="newLocation" placeholder="Location name (e.g. Accra Mall)">
+    <div class="btn-row">
+      <input id="newLat" placeholder="Latitude (optional)" type="number" step="any" style="flex:1">
+      <input id="newLng" placeholder="Longitude (optional)" type="number" step="any" style="flex:1">
+    </div>
+    <button onclick="submitSpot()">Submit Spot</button>
   </div>
 
   <div class="card" id="adminCard">
     <h3>Admin Dashboard</h3>
+    <div id="revenueStats" style="background:#0f172a;border-radius:8px;padding:12px;margin-bottom:16px;display:none">
+      <div style="display:flex;gap:20px;flex-wrap:wrap">
+        <div><div style="font-size:12px;color:#94a3b8">Total Revenue</div><div id="revenueTotal" style="font-size:22px;font-weight:bold;color:#22c55e">GHS 0.00</div></div>
+        <div><div style="font-size:12px;color:#94a3b8">Total Bookings</div><div id="revenueBookings" style="font-size:22px;font-weight:bold">0</div></div>
+        <div><div style="font-size:12px;color:#94a3b8">Active Now</div><div id="revenueActive" style="font-size:22px;font-weight:bold;color:#f59e0b">0</div></div>
+      </div>
+    </div>
     <input id="addLocation" placeholder="New slot location">
     <button onclick="addSlot()">Add Slot</button>
-    <input id="adminSlotId" type="number" placeholder="Slot ID">
-    <button onclick="releaseSlot()">Release Slot</button>
-    <button onclick="deleteSlot()">Delete Slot</button>
+    <input id="adminSlotId" type="number" placeholder="Slot ID to delete / release">
+    <div class="btn-row">
+      <button onclick="releaseSlot()">Release Slot</button>
+      <button class="btn-danger" onclick="deleteSlot()">Delete Slot</button>
+    </div>
   </div>
 
 </div>
 
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 let token = localStorage.getItem("smart_parking_token") || "";
 let role = localStorage.getItem("smart_parking_role") || "";
+let balance = 0;
+let userLat = null, userLng = null;
+let userMarker = null;
 
+// --- Haversine distance (km) ---
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function detectLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLat = pos.coords.latitude;
+    userLng = pos.coords.longitude;
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker([userLat, userLng], {
+      radius: 10, color: "#fff", weight: 2,
+      fillColor: "#3b82f6", fillOpacity: 1
+    }).addTo(map).bindPopup("<b>📍 You are here</b>");
+    map.setView([userLat, userLng], 14);
+    getSlots(); // re-render slots sorted by distance
+  }, () => {});
+}
+
+// --- Map setup ---
+var map = L.map('map').setView([5.6037, -0.1870], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+var markers = [];
+
+function showOnMap(slots) {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  slots.forEach((slot, i) => {
+    var lat = slot.lat != null ? slot.lat : 5.6037 + i * 0.003;
+    var lng = slot.lng != null ? slot.lng : -0.1870 + i * 0.003;
+    var color = slot.status === "free" ? "#22c55e" : "#ef4444";
+    var icon = L.divIcon({
+      className: "",
+      html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.5)"></div>`
+    });
+    var price = slot.price_per_hour ? ` · GHS ${slot.price_per_hour}/hr` : "";
+    L.marker([lat, lng], {icon})
+      .addTo(map)
+      .bindPopup(`<b>${slot.location}</b><br>${slot.status}${price}`);
+    markers.push(L.marker([lat, lng]));
+  });
+}
+
+// --- UI helpers ---
 function setStatus(msg) {
   document.getElementById("status").innerText = msg;
 }
 
-function setAdminVisibility() {
-  const card = document.getElementById("adminCard");
-  card.style.display = role === "admin" ? "block" : "none";
+function setBalance(amount) {
+  balance = amount;
+  document.getElementById("balanceDisplay").innerText = "GHS " + amount.toFixed(2);
+}
+
+function setVisibility() {
+  document.getElementById("adminCard").style.display = role === "admin" ? "block" : "none";
+  document.getElementById("addSpotCard").style.display = token ? "block" : "none";
+  document.getElementById("walletCard").style.display = token ? "block" : "none";
+  document.getElementById("myBookingsCard").style.display = token ? "block" : "none";
+  document.getElementById("walletBadge").style.display = token ? "block" : "none";
+  if (role === "admin") loadRevenue();
+  if (token) { loadBalance(); loadMyBookings(); }
+  detectLocation();
 }
 
 function authHeaders() {
-  const headers = {"Content-Type": "application/json"};
-  if (token) headers["Authorization"] = token;
-  return headers;
+  const h = {"Content-Type": "application/json"};
+  if (token) h["Authorization"] = token;
+  return h;
 }
 
+// --- Auth ---
 async function registerUser() {
   const res = await fetch("/auth/register", {
     method: "POST",
@@ -90,32 +236,145 @@ async function loginUser() {
     })
   });
   const data = await res.json();
-
   token = data.token || "";
   role = data.role || "";
   localStorage.setItem("smart_parking_token", token);
   localStorage.setItem("smart_parking_role", role);
-  setAdminVisibility();
-
   if (token) {
-    setStatus("Logged in successfully");
+    setStatus("Welcome, " + (data.username || "") + " (" + role + ")");
+    setVisibility();
   } else {
     setStatus(data.message || "Login failed");
   }
 }
 
-function renderSlots(data) {
-  let list = document.getElementById("slots");
+async function loadBalance() {
+  const res = await fetch("/auth/me", {headers: authHeaders()});
+  if (res.ok) {
+    const data = await res.json();
+    setBalance(data.balance || 0);
+  }
+}
+
+// --- Mobile Money (Paystack) ---
+let momoReference = "";
+
+async function initiateMoMo() {
+  if (!token) { setStatus("Please log in first"); return; }
+  const phone = document.getElementById("momoPhone").value.trim();
+  const provider = document.getElementById("momoProvider").value;
+  const amount = parseFloat(document.getElementById("momoAmount").value);
+  if (!phone || phone.length < 10) { setStatus("Enter a valid 10-digit phone number"); return; }
+  if (!amount || amount < 1) { setStatus("Enter a valid amount (min GHS 1)"); return; }
+  setStatus("Initiating payment …");
+  try {
+    const res = await fetch("/payment/initiate", {
+      method: "POST", headers: authHeaders(),
+      body: JSON.stringify({ phone, provider, amount })
+    });
+    const data = await res.json();
+    if (!res.ok) { setStatus(data.message || "Payment failed"); return; }
+    if (data.status === "send_otp" || data.status === "send_birthday") {
+      momoReference = data.reference;
+      document.getElementById("momoRef").value = momoReference;
+      document.getElementById("momoStep2").style.display = "block";
+      setStatus("✅ OTP sent to your phone — enter it below.");
+    } else if (data.status === "success") {
+      setStatus("✅ Payment successful! Updating balance…");
+      loadBalance();
+    } else {
+      setStatus(data.message || "Status: " + data.status);
+    }
+  } catch(e) { setStatus("Network error: " + e.message); }
+}
+
+async function submitMoMoOtp() {
+  const otp = document.getElementById("momoOtp").value.trim();
+  const reference = document.getElementById("momoRef").value || momoReference;
+  if (!otp) { setStatus("Enter the OTP from your phone"); return; }
+  setStatus("Verifying OTP…");
+  try {
+    const res = await fetch("/payment/submit-otp", {
+      method: "POST", headers: authHeaders(),
+      body: JSON.stringify({ otp, reference })
+    });
+    const data = await res.json();
+    setStatus(data.message || "Done");
+    if (data.status === "success") {
+      if (data.balance !== undefined) setBalance(data.balance);
+      document.getElementById("momoStep2").style.display = "none";
+      document.getElementById("momoOtp").value = "";
+      document.getElementById("momoAmount").value = "";
+      document.getElementById("momoPhone").value = "";
+    }
+  } catch(e) { setStatus("Network error: " + e.message); }
+}
+
+// --- Wallet (Demo top-up) ---
+async function topUp() {
+  const amount = parseFloat(document.getElementById("topUpAmount").value);
+  if (!amount || amount <= 0) { setStatus("Enter a valid amount"); return; }
+  const res = await fetch("/top-up", {
+    method: "POST", headers: authHeaders(),
+    body: JSON.stringify({amount})
+  });
+  const data = await res.json();
+  setStatus(data.message || "Top up done");
+  if (data.balance !== undefined) setBalance(data.balance);
+  document.getElementById("topUpAmount").value = "";
+}
+
+// --- Slots ---
+function renderSlots(slots) {
+  const list = document.getElementById("slots");
   list.innerHTML = "";
+  if (!slots.length) { list.innerHTML = "<li>No slots available.</li>"; return; }
 
-  data.forEach(slot => {
-    let li = document.createElement("li");
+  // Attach distance to each slot
+  const withDist = slots.map(slot => {
+    const dist = (userLat !== null && slot.lat && slot.lng)
+      ? haversineKm(userLat, userLng, slot.lat, slot.lng)
+      : null;
+    return { ...slot, dist };
+  });
+  // Sort nearest-first when user location is known
+  if (userLat !== null) withDist.sort((a, b) => (a.dist ?? 9999) - (b.dist ?? 9999));
 
+  withDist.forEach(slot => {
+    const li = document.createElement("li");
+    const isFree = slot.status === "free";
+    const statusColor = isFree ? "#22c55e" : "#ef4444";
+    const price = slot.price_per_hour ? `GHS ${slot.price_per_hour}/hr` : "";
+    const distLabel = slot.dist !== null
+      ? `<span class="dist-badge">${slot.dist < 1 ? (slot.dist*1000).toFixed(0)+"m" : slot.dist.toFixed(1)+"km"}</span>`
+      : "";
+    const dirUrl = (slot.lat && slot.lng)
+      ? `https://www.google.com/maps/dir/?api=1&destination=${slot.lat},${slot.lng}${userLat ? `&origin=${userLat},${userLng}` : ""}`
+      : null;
+    const dirBtn = dirUrl
+      ? `<a href="${dirUrl}" target="_blank" class="dir-link">↗ Directions</a>`
+      : "";
     li.innerHTML = `
-      <strong>${slot.location}</strong> - ${slot.status}
-      <button onclick="book(${slot.id})">Book</button>
+      <div class="slot-row">
+        <div>
+          <strong>${slot.location}</strong>
+          <span class="price-tag">${price}</span>${distLabel}<br>
+          <span style="color:${statusColor};font-size:13px">${slot.status}</span>
+          ${dirBtn}
+        </div>
+        ${isFree ? `
+        <div class="book-controls">
+          <select id="hrs_${slot.id}" style="padding:6px;border-radius:6px;border:none;background:#0f172a;color:white">
+            <option value="1">1 hr</option>
+            <option value="2">2 hrs</option>
+            <option value="3">3 hrs</option>
+            <option value="4">4 hrs</option>
+            <option value="8">8 hrs</option>
+          </select>
+          <button onclick="book(${slot.id}, ${slot.price_per_hour})" style="width:auto;padding:8px 14px">Book</button>
+        </div>` : ""}
+      </div>
     `;
-
     list.appendChild(li);
   });
 }
@@ -124,57 +383,107 @@ async function getSlots() {
   const res = await fetch("/slots");
   const data = await res.json();
   renderSlots(data);
-  setStatus("Slots loaded");
+  showOnMap(data);
 }
 
-async function book(id) {
+async function book(id, pricePerHour) {
+  if (!token) { setStatus("Please log in to book a slot"); return; }
+  const hoursEl = document.getElementById("hrs_" + id);
+  const hours = hoursEl ? parseInt(hoursEl.value) : 1;
+  const cost = pricePerHour * hours;
+  if (balance < cost) {
+    setStatus(`Need GHS ${cost.toFixed(2)} — top up your wallet first!`);
+    return;
+  }
   const res = await fetch("/book", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({id})
+    method: "POST", headers: authHeaders(),
+    body: JSON.stringify({id, hours})
   });
   const data = await res.json();
-  setStatus(data.message || "Book request completed");
+  setStatus(data.message || "Booked");
+  if (data.balance_remaining !== undefined) setBalance(data.balance_remaining);
+  getSlots();
+  loadMyBookings();
+}
+
+// --- My Bookings ---
+async function loadMyBookings() {
+  if (!token) return;
+  const res = await fetch("/my-bookings", {headers: authHeaders()});
+  if (!res.ok) return;
+  const bookings = await res.json();
+  const list = document.getElementById("myBookingsList");
+  if (!bookings.length) { list.innerHTML = "<li style='color:#94a3b8'>No bookings yet.</li>"; return; }
+  list.innerHTML = bookings.map(b => {
+    const badge = b.status === "active"
+      ? `<span style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:999px;font-size:11px">ACTIVE</span>`
+      : `<span style="background:#334155;color:#94a3b8;padding:2px 8px;border-radius:999px;font-size:11px">done</span>`;
+    return `<li style="padding:8px 0;border-bottom:1px solid #1e293b">
+      <strong>${b.location}</strong> ${badge}<br>
+      <span style="color:#94a3b8;font-size:13px">${b.hours}hr · GHS ${b.amount.toFixed(2)} · ${b.booked_at ? b.booked_at.slice(0,16).replace("T"," ") : ""}</span>
+    </li>`;
+  }).join("");
+}
+
+// --- Add spot ---
+async function submitSpot() {
+  const location = document.getElementById("newLocation").value.trim();
+  if (!location) { setStatus("Please enter a location name"); return; }
+  const lat = document.getElementById("newLat").value;
+  const lng = document.getElementById("newLng").value;
+  const body = {location};
+  if (lat) body.lat = parseFloat(lat);
+  if (lng) body.lng = parseFloat(lng);
+  const res = await fetch("/add-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify(body)});
+  const data = await res.json();
+  setStatus(data.message || "Spot submitted");
+  document.getElementById("newLocation").value = "";
+  document.getElementById("newLat").value = "";
+  document.getElementById("newLng").value = "";
   getSlots();
 }
 
-async function addSlot() {
-  const location = document.getElementById("addLocation").value;
-  const res = await fetch("/add-slot", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({location})
-  });
+// --- Admin actions ---
+async function loadRevenue() {
+  const res = await fetch("/admin/revenue", {headers: authHeaders()});
+  if (!res.ok) return;
   const data = await res.json();
-  setStatus(data.message || "Add slot completed");
+  document.getElementById("revenueStats").style.display = "block";
+  document.getElementById("revenueTotal").innerText = "GHS " + data.total_revenue_ghs.toFixed(2);
+  document.getElementById("revenueBookings").innerText = data.total_bookings;
+  document.getElementById("revenueActive").innerText = data.active_bookings;
+}
+
+async function addSlot() {
+  const location = document.getElementById("addLocation").value.trim();
+  if (!location) { setStatus("Enter a location"); return; }
+  const res = await fetch("/admin/add-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({location})});
+  const data = await res.json();
+  setStatus(data.message || "Slot added");
+  document.getElementById("addLocation").value = "";
   getSlots();
 }
 
 async function releaseSlot() {
   const id = Number(document.getElementById("adminSlotId").value);
-  const res = await fetch("/release-slot", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({id})
-  });
+  const res = await fetch("/release-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({id})});
   const data = await res.json();
-  setStatus(data.message || "Release completed");
+  setStatus(data.message || "Released");
   getSlots();
+  loadRevenue();
 }
 
 async function deleteSlot() {
   const id = Number(document.getElementById("adminSlotId").value);
-  const res = await fetch(`/slots/${id}`, {
-    method: "DELETE",
-    headers: authHeaders()
-  });
+  const res = await fetch("/admin/delete-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({id})});
   const data = await res.json();
-  setStatus(data.message || "Delete completed");
+  setStatus(data.message || "Deleted");
   getSlots();
 }
 
-setAdminVisibility();
+setVisibility();
 getSlots();
+detectLocation();
 </script>
 
 </body>

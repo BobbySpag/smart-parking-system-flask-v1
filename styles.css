@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   font-family: Arial, sans-serif;
   background: #0f172a;
@@ -24,6 +28,31 @@ body {
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 20px;
+  width: 100%;
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    flex-direction: row;
+    gap: 20px;
+  }
+
+  .grid .card {
+    flex: 1;
+  }
+}
+
+#map {
+  height: 400px;
+  border-radius: 10px;
+  margin-top: 12px;
+  z-index: 0;
 }
 
 input {
@@ -35,12 +64,32 @@ input {
 }
 
 button {
-  padding: 10px 15px;
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
   border-radius: 8px;
   border: none;
   background: #22c55e;
   color: white;
   cursor: pointer;
+  margin-top: 8px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-row button {
+  flex: 1;
+}
+
+.btn-danger {
+  background: #ef4444 !important;
+}
+
+.btn-danger:hover {
+  background: #dc2626 !important;
 }
 
 button:hover {
@@ -62,4 +111,80 @@ button:hover {
 
 #adminCard {
   display: none;
+}
+
+#addSpotCard {
+  display: none;
+}
+
+#walletCard {
+  display: none;
+}
+
+#myBookingsCard {
+  display: none;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.price-tag {
+  background: #0f172a;
+  color: #22c55e;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+}
+
+.slot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.book-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#slots {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dist-badge {
+  background: #1e3a5f;
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.dir-link {
+  display: inline-block;
+  color: #0ea5e9;
+  font-size: 12px;
+  margin-top: 3px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.dir-link:hover {
+  text-decoration: underline;
 }

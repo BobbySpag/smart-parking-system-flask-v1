@@ -12,6 +12,7 @@ psycopg==3.3.3
 psycopg-binary==3.3.3
 psycopg2-binary==2.9.11
 PyJWT==2.12.1
+requests==2.32.3
 SQLAlchemy==2.0.44
 typing_extensions==4.15.0
 tzdata==2025.3

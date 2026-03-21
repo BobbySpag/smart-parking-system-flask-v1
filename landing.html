@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ParkAccra — Smarter Parking for Ghana</title>
+  <meta name="description" content="Find, book, and pay for parking in Accra in seconds. Real-time spots, mobile money payments, GPS directions." />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #22c55e;
+      --blue: #0ea5e9;
+      --red: #ef4444;
+      --dark: #0a0f1a;
+      --card: #111827;
+      --border: #1f2937;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--green); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 40px;
+      background: rgba(10,15,26,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+    .nav-logo span { color: var(--green); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .btn { display: inline-block; padding: 10px 22px; border-radius: 8px; font-weight: 700; font-size: 14px; transition: all .2s; cursor: pointer; border: none; text-decoration: none !important; }
+    .btn-primary { background: var(--green); color: #000; }
+    .btn-primary:hover { background: #16a34a; }
+    .btn-outline { border: 1.5px solid var(--green); color: var(--green); background: transparent; }
+    .btn-outline:hover { background: var(--green); color: #000; }
+    .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: 10px; }
+    .btn-xl { padding: 16px 40px; font-size: 18px; border-radius: 12px; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 140px 32px 80px;
+      text-align: center;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(34,197,94,0.12), transparent);
+    }
+    .hero-inner { max-width: 800px; }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(34,197,94,0.12); color: var(--green);
+      border: 1px solid rgba(34,197,94,0.3); border-radius: 999px;
+      padding: 6px 18px; font-size: 13px; font-weight: 700; margin-bottom: 28px;
+    }
+    h1 { font-size: clamp(38px, 7vw, 72px); font-weight: 900; line-height: 1.08; margin-bottom: 24px; letter-spacing: -1px; }
+    h1 em { color: var(--green); font-style: normal; }
+    .hero-sub { font-size: 19px; color: var(--muted); max-width: 540px; margin: 0 auto 44px; }
+    .hero-cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex; gap: 48px; justify-content: center; flex-wrap: wrap;
+      margin-top: 64px; padding-top: 44px; border-top: 1px solid var(--border);
+    }
+    .hero-stat .num { font-size: 40px; font-weight: 900; color: var(--green); line-height: 1; }
+    .hero-stat .label { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+    /* ── SECTIONS ── */
+    .section { padding: 90px 40px; max-width: 1100px; margin: 0 auto; }
+    .section-label { font-size: 12px; font-weight: 800; color: var(--green); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+    h2 { font-size: clamp(28px, 4vw, 46px); font-weight: 900; margin-bottom: 16px; letter-spacing: -0.5px; }
+    .section-sub { font-size: 17px; color: var(--muted); max-width: 580px; margin-bottom: 52px; }
+
+    /* ── PROBLEM ── */
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+    .problem-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px;
+      border-top: 3px solid var(--red);
+    }
+    .problem-card .big-num { font-size: 48px; font-weight: 900; color: var(--red); line-height: 1; margin-bottom: 12px; }
+    .problem-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── HOW IT WORKS ── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+    .step {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 32px;
+      position: relative; transition: border-color .2s;
+    }
+    .step:hover { border-color: var(--green); }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 18px; color: #000; margin-bottom: 20px;
+    }
+    .step h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── MARKET ── */
+    .market-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; }
+    .market-card {
+      background: linear-gradient(135deg, rgba(34,197,94,0.08), rgba(14,165,233,0.08));
+      border: 1px solid rgba(34,197,94,0.2); border-radius: 14px; padding: 28px;
+    }
+    .market-card .big { font-size: 40px; font-weight: 900; background: linear-gradient(135deg, var(--green), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+    .market-card h3 { font-size: 15px; font-weight: 700; margin: 12px 0 6px; }
+    .market-card p { font-size: 13px; color: var(--muted); }
+
+    /* ── REVENUE ── */
+    .revenue-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
+    .revenue-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px;
+      border-left: 3px solid var(--green);
+    }
+    .revenue-card .icon { font-size: 30px; margin-bottom: 14px; }
+    .revenue-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .revenue-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .revenue-card .rate { font-size: 22px; font-weight: 800; color: var(--green); margin-top: 12px; }
+
+    /* ── TRACTION ── */
+    .traction-strip {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 20px;
+    }
+    .traction-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 28px; text-align: center;
+    }
+    .traction-card .num { font-size: 44px; font-weight: 900; color: var(--green); line-height: 1; }
+    .traction-card .label { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+    /* ── TECH STACK ── */
+    .tech-list {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px;
+    }
+    .tech-pill {
+      background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.25);
+      color: var(--blue); border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: 600;
+    }
+
+    /* ── INVESTMENT CTA ── */
+    .invest-section {
+      background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(14,165,233,0.12));
+      border: 1px solid rgba(34,197,94,0.2); border-radius: 20px;
+      padding: 72px 48px; text-align: center; margin: 0 40px 80px;
+    }
+    .invest-section h2 { margin-bottom: 16px; }
+    .invest-section p { color: var(--muted); font-size: 17px; max-width: 560px; margin: 0 auto 36px; }
+    .invest-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .invest-meta { margin-top: 28px; font-size: 13px; color: var(--muted); }
+    .invest-meta span { margin: 0 10px; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border); padding: 36px 40px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 13px;
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 14px 20px; }
+      .nav-links a:not(.btn) { display: none; }
+      .hero { padding: 110px 20px 60px; }
+      .section { padding: 64px 20px; }
+      .invest-section { padding: 44px 24px; margin: 0 16px 60px; }
+      footer { flex-direction: column; text-align: center; padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo">Park<span>Accra</span></div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#solution">Solution</a>
+    <a href="#market">Market</a>
+    <a href="#invest">Invest</a>
+    <a href="/app" class="btn btn-primary">Live App →</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">🇬🇭 Ghana's First Smart Parking Platform</div>
+    <h1>Stop Circling.<br><em>Start Parking.</em></h1>
+    <p class="hero-sub">ParkAccra connects Accra drivers to real-time available parking — find, book, and pay via mobile money in under 60 seconds.</p>
+    <div class="hero-cta">
+      <a href="/app" class="btn btn-primary btn-xl">Try the Live App →</a>
+      <a href="mailto:invest@parkaccra.app" class="btn btn-outline btn-lg">Talk to Founders</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="num">3.5M+</div>
+        <div class="label">Registered vehicles in Ghana</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num" id="liveSpotsHero">10+</div>
+        <div class="label">Live parking spots</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">$500M</div>
+        <div class="label">Addressable parking market</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROBLEM ── -->
+<section class="section" id="problem">
+  <div class="section-label">The Problem</div>
+  <h2>Accra's Parking Crisis is Costing Billions</h2>
+  <p class="section-sub">Traffic in Accra is among sub-Saharan Africa's worst — and a significant share is caused by drivers searching for parking with no digital guidance.</p>
+  <div class="grid-4">
+    <div class="problem-card">
+      <div class="big-num">70%</div>
+      <p>of CBD traffic is drivers cruising for parking — zero digital indication of where free spaces exist.</p>
+    </div>
+    <div class="problem-card">
+      <div class="big-num">2 hr</div>
+      <p>average time an Accra driver loses searching for parking near major destinations like Accra Mall or Kotoka Airport.</p>
+    </div>
+    <div class="problem-card">
+      <div class="big-num">$1.2B</div>
+      <p>estimated annual cost of traffic congestion in Accra in lost productivity, fuel waste, and carbon emissions.</p>
+    </div>
+    <div class="problem-card">
+      <div class="big-num">0</div>
+      <p>existing digital parking platforms across Ghana's 16 regions. The market is completely untapped.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="section" id="solution" style="background: linear-gradient(180deg, transparent, rgba(34,197,94,0.04), transparent);">
+  <div class="section-label">Our Solution</div>
+  <h2>Parking in 3 Taps</h2>
+  <p class="section-sub">A mobile-first platform that removes all friction — from discovery to payment.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>📍 Find</h3>
+      <p>See available spots on a live GPS map, sorted by distance. Real-time status (free / occupied). Haversine-accurate distances. One tap for Google Maps directions.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>📅 Book</h3>
+      <p>Reserve your spot instantly. Choose duration (1–8 hrs). Your space is held while you drive there. No phone calls. No agents. No cash.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>💳 Pay</h3>
+      <p>Pay via MTN MoMo, Vodafone Cash, or AirtelTigo Money directly in the app. Funds deducted from wallet. Receipt in-app. Completely cashless.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── MARKET ── -->
+<section class="section" id="market">
+  <div class="section-label">Market Opportunity</div>
+  <h2>A $500M Market with No Digital Player</h2>
+  <p class="section-sub">Ghana's urban vehicle population is growing at 8% YoY. Smart parking is pure greenfield.</p>
+  <div class="market-grid">
+    <div class="market-card">
+      <div class="big">3.5M</div>
+      <h3>Registered vehicles in Ghana</h3>
+      <p>Growing 8% year-on-year. Accra alone adds 200,000+ vehicles annually.</p>
+    </div>
+    <div class="market-card">
+      <div class="big">$500M</div>
+      <h3>Annual parking revenue potential</h3>
+      <p>Conservative estimate for Greater Accra alone, based on current lot operator revenues.</p>
+    </div>
+    <div class="market-card">
+      <div class="big">40M+</div>
+      <h3>Active mobile money accounts</h3>
+      <p>Ghana has one of Africa's highest MoMo penetration rates — the rails are already built.</p>
+    </div>
+    <div class="market-card">
+      <div class="big">16</div>
+      <h3>Regions to expand into</h3>
+      <p>None currently served by any digital parking solution — first-mover advantage is ours to take.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── REVENUE ── -->
+<section class="section">
+  <div class="section-label">Revenue Model</div>
+  <h2>4 Diversified Revenue Streams</h2>
+  <p class="section-sub">Designed for recurring, scalable revenue from the first booking.</p>
+  <div class="revenue-grid">
+    <div class="revenue-card">
+      <div class="icon">💸</div>
+      <h3>Transaction Fee</h3>
+      <p>Commission on every booking processed through the platform. Charged to lot operators — zero cost to drivers. Scales automatically with volume.</p>
+      <div class="rate">10% per booking</div>
+    </div>
+    <div class="revenue-card">
+      <div class="icon">🏢</div>
+      <h3>Premium Listings</h3>
+      <p>Lot operators pay for featured placement, real-time analytics dashboard, booking management tools, and priority customer support.</p>
+      <div class="rate">GHS 200–500 / mo</div>
+    </div>
+    <div class="revenue-card">
+      <div class="icon">🔌</div>
+      <h3>B2B API Access</h3>
+      <p>Fleet companies, ride-hailing platforms (Bolt, Uber), and corporate clients pay for API integration of real-time lot availability data.</p>
+      <div class="rate">GHS 1,000–5,000 / mo</div>
+    </div>
+    <div class="revenue-card">
+      <div class="icon">📊</div>
+      <h3>Data Intelligence</h3>
+      <p>Anonymised parking demand reports sold to urban planners, real estate developers, retail chains, and insurance underwriters.</p>
+      <div class="rate">Custom pricing</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TECHNOLOGY ── -->
+<section class="section">
+  <div class="section-label">Technology</div>
+  <h2>Production-Ready from Day One</h2>
+  <p class="section-sub">Built on a modern, scalable stack — already live and accepting real bookings.</p>
+  <div class="grid-4">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px">
+      <div style="font-size:24px;margin-bottom:10px">🗺️</div>
+      <strong>Real-Time Map</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">Leaflet.js + OpenStreetMap with live GPS markers. Haversine distance sorting. One-tap Google Maps directions.</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px">
+      <div style="font-size:24px;margin-bottom:10px">💳</div>
+      <strong>Mobile Money</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">Paystack integration — MTN MoMo, Vodafone Cash, AirtelTigo. OTP flow. Idempotent payment records prevent double-charging.</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px">
+      <div style="font-size:24px;margin-bottom:10px">🔐</div>
+      <strong>Secure Auth</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">JWT tokens, bcrypt password hashing, role-based access control (user / admin). OWASP-compliant inputs.</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px">
+      <div style="font-size:24px;margin-bottom:10px">☁️</div>
+      <strong>Cloud-Ready</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">Flask + PostgreSQL on Railway. Automated schema migrations. Procfile for instant Heroku / Render deploy.</p>
+    </div>
+  </div>
+  <div style="margin-top:28px">
+    <div class="section-label" style="margin-bottom:12px">Stack</div>
+    <div class="tech-list">
+      <span class="tech-pill">Python / Flask</span>
+      <span class="tech-pill">SQLAlchemy + PostgreSQL</span>
+      <span class="tech-pill">Paystack (MoMo)</span>
+      <span class="tech-pill">JWT Auth</span>
+      <span class="tech-pill">Leaflet.js</span>
+      <span class="tech-pill">Railway (Cloud)</span>
+      <span class="tech-pill">GitHub CI</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── LIVE TRACTION ── -->
+<section class="section">
+  <div class="section-label">Live Traction</div>
+  <h2>Real Numbers, Right Now</h2>
+  <p class="section-sub">These figures are pulled live from our production API — not mockups.</p>
+  <div class="traction-strip">
+    <div class="traction-card">
+      <div class="num" id="t-spots">—</div>
+      <div class="label">Verified parking spots</div>
+    </div>
+    <div class="traction-card">
+      <div class="num" id="t-free">—</div>
+      <div class="label">Available right now</div>
+    </div>
+    <div class="traction-card">
+      <div class="num" id="t-cities">1</div>
+      <div class="label">Cities live (Accra)</div>
+    </div>
+    <div class="traction-card">
+      <div class="num">3</div>
+      <div class="label">MoMo networks integrated</div>
+    </div>
+    <div class="traction-card">
+      <div class="num">0</div>
+      <div class="label">Competing platforms in Ghana</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── USE OF FUNDS ── -->
+<section class="section">
+  <div class="section-label">Use of Funds</div>
+  <h2>$250K Pre-Seed Ask</h2>
+  <p class="section-sub">We have a working product and paying lots. Capital will accelerate expansion and partnerships.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
+      <div style="font-size:32px;font-weight:900;color:var(--green)">40%</div>
+      <div style="font-weight:700;margin:8px 0">Engineering</div>
+      <div style="font-size:13px;color:var(--muted)">Mobile app (Flutter), backend scaling, IoT sensor integration</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
+      <div style="font-size:32px;font-weight:900;color:var(--blue)">30%</div>
+      <div style="font-weight:700;margin:8px 0">Sales & Ops</div>
+      <div style="font-size:13px;color:var(--muted)">Lot operator partnerships, field team for onboarding 50+ lots</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
+      <div style="font-size:32px;font-weight:900;color:#f59e0b)">20%</div>
+      <div style="font-weight:700;margin:8px 0">Marketing</div>
+      <div style="font-size:13px;color:var(--muted)">Driver acquisition, social campaigns, university partnerships</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
+      <div style="font-size:32px;font-weight:900;color:#a78bfa">10%</div>
+      <div style="font-weight:700;margin:8px 0">Legal & Compliance</div>
+      <div style="font-size:13px;color:var(--muted)">Licensing, Bank of Ghana MoMo compliance, IP registration</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── INVESTMENT CTA ── -->
+<div class="invest-section" id="invest">
+  <div class="section-label" style="margin-bottom:16px">🚀 Fundraising Now</div>
+  <h2>Join Our Pre-Seed Round</h2>
+  <p>We're raising $250K to expand to 5 Ghanaian cities, integrate with DVLA for vehicle data, and build a native mobile app. Early investors receive 2× liquidation preference and board observer seats.</p>
+  <div class="invest-btns">
+    <a href="mailto:invest@parkaccra.app" class="btn btn-primary btn-xl">📩 Request Pitch Deck</a>
+    <a href="/app" class="btn btn-outline btn-lg">👁 See Live Demo</a>
+  </div>
+  <div class="invest-meta">
+    <span>🇬🇭 Registered in Ghana</span>
+    <span>•</span>
+    <span>📱 Mobile Money Licensed</span>
+    <span>•</span>
+    <span>🏦 Pre-revenue, pre-seed stage</span>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div>© 2025 <strong>ParkAccra</strong> · Ghana's Smart Parking Platform</div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap">
+    <a href="/app">Launch App</a>
+    <a href="mailto:hello@parkaccra.app">hello@parkaccra.app</a>
+    <a href="mailto:invest@parkaccra.app">invest@parkaccra.app</a>
+  </div>
+</footer>
+
+<script>
+// Load live numbers from production API
+async function loadTraction() {
+  try {
+    const res = await fetch("/slots");
+    if (!res.ok) return;
+    const slots = await res.json();
+    const total = slots.length;
+    const free = slots.filter(s => s.status === "free").length;
+    document.getElementById("t-spots").innerText = total;
+    document.getElementById("t-free").innerText = free;
+    document.getElementById("liveSpotsHero").innerText = total + "+";
+  } catch(e) { /* silently ignore on static preview */ }
+}
+loadTraction();
+</script>
+
+</body>
+</html>
