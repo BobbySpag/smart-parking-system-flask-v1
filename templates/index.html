@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Parking Frontend</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <h1>Smart Parking Dashboard</h1>
+      <p>Authenticate, manage parking slots, and book in one place.</p>
+      <span id="apiStatus" class="pill">API: checking...</span>
+    </header>
+
+    <section class="card grid-two">
+      <div>
+        <h2>Register</h2>
+        <div class="row">
+          <input id="registerUsername" type="text" placeholder="username" />
+          <input id="registerPassword" type="password" placeholder="password" />
+        </div>
+        <button id="registerBtn">Create Account</button>
+      </div>
+      <div>
+        <h2>Login</h2>
+        <div class="row">
+          <input id="loginUsername" type="text" placeholder="username" />
+          <input id="loginPassword" type="password" placeholder="password" />
+        </div>
+        <button id="loginBtn">Sign In</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Token</h2>
+      <p class="small">This token is used for protected endpoints.</p>
+      <textarea id="tokenBox" rows="3" placeholder="Bearer token appears here"></textarea>
+      <div class="actions">
+        <button id="saveTokenBtn">Save Token</button>
+        <button id="clearTokenBtn" class="secondary">Clear Token</button>
+      </div>
+    </section>
+
+    <section class="card grid-two">
+      <div>
+        <h2>Add Slot</h2>
+        <div class="row">
+          <input id="addLocation" type="text" placeholder="location (e.g. Accra Mall)" />
+          <button id="addSlotBtn">Add Slot</button>
+        </div>
+      </div>
+      <div>
+        <h2>Actions by Slot ID</h2>
+        <div class="row">
+          <input id="slotIdInput" type="number" placeholder="slot id" />
+          <button id="bookBtn">Book</button>
+          <button id="releaseBtn" class="secondary">Release</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="slots-head">
+        <h2>Slots</h2>
+        <button id="refreshBtn">Refresh</button>
+      </div>
+      <div id="slotsContainer" class="table-wrap"></div>
+    </section>
+
+    <section class="card">
+      <h2>Activity Log</h2>
+      <pre id="logBox"></pre>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
