@@ -129,6 +129,14 @@
       flex-wrap: wrap;
     }
 
+    .mt-8 { margin-top: 8px; }
+    .hr-sep {
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 12px 0;
+    }
+    .hidden { display: none; }
+
     input,
     textarea,
     button {
@@ -263,7 +271,7 @@
         <h2>Access Token</h2>
         <p class="muted">Paste or reuse your token. Stored in browser for convenience.</p>
         <textarea id="tokenBox" rows="3" placeholder="JWT token"></textarea>
-        <div class="row" style="margin-top: 8px;">
+        <div class="row mt-8">
           <button onclick="saveToken()">Save Token</button>
           <button class="secondary" onclick="clearToken()">Clear Token</button>
         </div>
@@ -278,17 +286,26 @@
       </article>
 
       <article class="card span-5">
-        <h2>Actions</h2>
-        <p class="muted">Add a slot, then book or release by slot ID.</p>
+        <h2>User Actions</h2>
+        <p class="muted">Any logged-in user can book by slot ID.</p>
+        <div class="row">
+          <input id="slotId" class="w-half" type="number" placeholder="Slot ID">
+          <button onclick="bookSlot()">Book</button>
+        </div>
+      </article>
+
+      <article id="adminPanel" class="card span-12 hidden">
+        <h2>Admin Dashboard</h2>
+        <p class="muted">Admins can add, release, and delete parking slots.</p>
         <div class="row">
           <input id="addLocation" class="w-full" placeholder="Location (e.g. Accra Mall)">
           <button onclick="addSlot()">Add Slot</button>
         </div>
-        <hr style="border:0;border-top:1px solid var(--line);margin:12px 0;">
+        <hr class="hr-sep">
         <div class="row">
-          <input id="slotId" class="w-half" type="number" placeholder="Slot ID">
-          <button onclick="bookSlot()">Book</button>
+          <input id="adminSlotId" class="w-half" type="number" placeholder="Slot ID">
           <button class="warn" onclick="releaseSlot()">Release</button>
+          <button class="secondary" onclick="deleteSlot()">Delete Slot</button>
         </div>
       </article>
 
@@ -304,9 +321,17 @@
     const logEl = document.getElementById("log");
     const tokenBox = document.getElementById("tokenBox");
     const slotsContainer = document.getElementById("slotsContainer");
+    const adminPanel = document.getElementById("adminPanel");
 
     let token = localStorage.getItem("smart_parking_token") || "";
+    let currentRole = localStorage.getItem("smart_parking_role") || "user";
     tokenBox.value = token;
+
+    function updateRoleUI() {
+      const isAdmin = currentRole === "admin";
+      adminPanel.style.display = isAdmin ? "block" : "none";
+      apiBadge.textContent = isAdmin ? "API: connected (admin)" : "API: connected";
+    }
 
     function writeLog(message, payload) {
       const entry = `[${new Date().toLocaleTimeString()}] ${message}` + (payload ? `\n${JSON.stringify(payload, null, 2)}` : "") + "\n\n";
@@ -335,13 +360,38 @@
       token = tokenBox.value.trim();
       localStorage.setItem("smart_parking_token", token);
       writeLog("Token saved manually");
+      refreshIdentity();
     }
 
     function clearToken() {
       token = "";
       tokenBox.value = "";
       localStorage.removeItem("smart_parking_token");
+      currentRole = "user";
+      localStorage.removeItem("smart_parking_role");
+      updateRoleUI();
       writeLog("Token cleared");
+    }
+
+    async function refreshIdentity() {
+      if (!token) {
+        currentRole = "user";
+        updateRoleUI();
+        return;
+      }
+
+      try {
+        const me = await requestJSON("/auth/me", { method: "GET" });
+        currentRole = me.role || "user";
+        localStorage.setItem("smart_parking_role", currentRole);
+        updateRoleUI();
+        writeLog("Session active", { username: me.username, role: me.role });
+      } catch (err) {
+        currentRole = "user";
+        localStorage.removeItem("smart_parking_role");
+        updateRoleUI();
+        writeLog("Session check failed", err);
+      }
     }
 
     async function registerUser() {
@@ -367,7 +417,10 @@
         token = data.token || "";
         tokenBox.value = token;
         localStorage.setItem("smart_parking_token", token);
-        writeLog("Login success", { hasToken: Boolean(token) });
+        currentRole = data.role || "user";
+        localStorage.setItem("smart_parking_role", currentRole);
+        updateRoleUI();
+        writeLog("Login success", { hasToken: Boolean(token), role: currentRole });
       } catch (err) {
         writeLog("Login failed", err);
       }
@@ -446,7 +499,7 @@
 
     async function releaseSlot() {
       try {
-        const id = Number(document.getElementById("slotId").value);
+        const id = Number(document.getElementById("adminSlotId").value);
         const data = await requestJSON("/release-slot", {
           method: "POST",
           body: JSON.stringify({ id })
@@ -458,6 +511,21 @@
       }
     }
 
+    async function deleteSlot() {
+      try {
+        const id = Number(document.getElementById("adminSlotId").value);
+        const data = await requestJSON(`/slots/${id}`, {
+          method: "DELETE"
+        });
+        writeLog("Delete success", data);
+        getSlots();
+      } catch (err) {
+        writeLog("Delete failed", err);
+      }
+    }
+
+    updateRoleUI();
+    refreshIdentity();
     getSlots();
   </script>
 </body>

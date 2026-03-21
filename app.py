@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, send_file
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from flask_bcrypt import Bcrypt
 from functools import wraps
@@ -39,24 +39,76 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True)
     password_hash = Column(String)
+    role = Column(String, default="user")
 
 
 Base.metadata.create_all(engine)
 
 
+def _ensure_user_role_column():
+    # Lightweight migration to support existing databases without the role column.
+    with engine.connect() as conn:
+        if DATABASE_URL.startswith("sqlite"):
+            cols = conn.execute(text("PRAGMA table_info(users)")).fetchall()
+            names = [row[1] for row in cols]
+            if "role" not in names:
+                conn.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR DEFAULT 'user'"))
+                conn.commit()
+        else:
+            cols = conn.execute(
+                text(
+                    """
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = 'users'
+                    """
+                )
+            ).fetchall()
+            names = [row[0] for row in cols]
+            if "role" not in names:
+                conn.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR DEFAULT 'user'"))
+                conn.commit()
+
+
+_ensure_user_role_column()
+
+
+def _decode_token():
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "", 1).strip() if auth_header else ""
+
+    if not token:
+        return None, (jsonify({"message": "Token missing"}), 401)
+
+    try:
+        payload = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+        return payload, None
+    except Exception:
+        return None, (jsonify({"message": "Invalid token"}), 401)
+
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth_header = request.headers.get("Authorization", "")
-        token = auth_header.replace("Bearer ", "", 1).strip() if auth_header else ""
+        _, err = _decode_token()
+        if err:
+            return err
 
-        if not token:
-            return jsonify({"message": "Token missing"}), 401
+        return f(*args, **kwargs)
 
-        try:
-            jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
-        except Exception:
-            return jsonify({"message": "Invalid token"}), 401
+    return decorated
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        payload, err = _decode_token()
+        if err:
+            return err
+
+        user = session.get(User, payload.get("user_id"))
+        if not user or user.role != "admin":
+            return jsonify({"message": "Admin access required"}), 403
 
         return f(*args, **kwargs)
 
@@ -77,12 +129,16 @@ def register_user():
         return jsonify({"message": "username already exists"}), 409
 
     hashed_pw = bcrypt.generate_password_hash(password).decode("utf-8")
-    user = User(username=username, password_hash=hashed_pw)
+    # First account becomes admin so the dashboard can be used immediately.
+    existing_admin = session.query(User).filter_by(role="admin").first()
+    role = "admin" if existing_admin is None else "user"
+
+    user = User(username=username, password_hash=hashed_pw, role=role)
 
     session.add(user)
     session.commit()
 
-    return jsonify({"message": "User registered successfully"})
+    return jsonify({"message": "User registered successfully", "role": role})
 
 
 @app.route("/auth/login", methods=["POST"])
@@ -97,14 +153,30 @@ def login_user():
         token = jwt.encode(
             {
                 "user_id": user.id,
+                "username": user.username,
+                "role": user.role or "user",
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=2),
             },
             app.config["SECRET_KEY"],
             algorithm="HS256",
         )
-        return jsonify({"token": token})
+        return jsonify({"token": token, "role": user.role or "user", "username": user.username})
 
     return jsonify({"message": "Invalid credentials"}), 401
+
+
+@app.route("/auth/me", methods=["GET"])
+@token_required
+def auth_me():
+    payload, err = _decode_token()
+    if err:
+        return err
+
+    user = session.get(User, payload.get("user_id"))
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    return jsonify({"id": user.id, "username": user.username, "role": user.role or "user"})
 
 
 @app.route("/slots", methods=["GET"])
@@ -115,7 +187,7 @@ def get_slots():
 
 
 @app.route("/add-slot", methods=["POST"])
-@token_required
+@admin_required
 def add_slot():
     data = request.json or {}
     if "location" not in data:
@@ -146,7 +218,7 @@ def book_slot():
 
 
 @app.route("/release-slot", methods=["POST"])
-@token_required
+@admin_required
 def release_slot():
     data = request.json or {}
     slot_id = data.get("id")
@@ -161,6 +233,18 @@ def release_slot():
         return jsonify({"message": "Slot released"})
 
     return jsonify({"message": "Slot not found"}), 404
+
+
+@app.route("/slots/<int:slot_id>", methods=["DELETE"])
+@admin_required
+def delete_slot(slot_id):
+    slot = session.get(ParkingSlot, slot_id)
+    if not slot:
+        return jsonify({"message": "Slot not found"}), 404
+
+    session.delete(slot)
+    session.commit()
+    return jsonify({"message": "Slot deleted"})
 
 
 @app.route("/health", methods=["GET"])
@@ -181,8 +265,9 @@ def home():
             "status": "running",
             "version": "1.0",
             "routes": {
-                "GET": ["/", "/slots", "/health", "/app"],
+                "GET": ["/", "/slots", "/health", "/app", "/auth/me"],
                 "POST": ["/auth/register", "/auth/login", "/add-slot", "/book", "/release-slot"],
+                "DELETE": ["/slots/<slot_id>"],
             },
         }
     )
