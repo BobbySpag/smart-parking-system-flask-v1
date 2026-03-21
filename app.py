@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from flask import Flask, jsonify, request
-from sqlalchemy import DateTime, Integer, String, create_engine
+from sqlalchemy import DateTime, Integer, String, create_engine, pool, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 app = Flask(__name__)
@@ -20,6 +20,28 @@ def _build_database_url() -> str:
 DATABASE_URL = _build_database_url()
 
 
+def _build_engine():
+    """Create engine with appropriate pooling for SQLite or Postgres."""
+    if DATABASE_URL.startswith("postgresql://"):
+        # Postgres: use connection pooling for production
+        return create_engine(
+            DATABASE_URL,
+            future=True,
+            pool_size=10,
+            max_overflow=20,
+            pool_pre_ping=True,  # Verify connections before use
+            pool_recycle=3600,  # Recycle connections every hour
+        )
+    else:
+        # SQLite: use StaticPool for local development
+        return create_engine(
+            DATABASE_URL,
+            future=True,
+            connect_args={"check_same_thread": False},
+            poolclass=pool.StaticPool,
+        )
+
+
 class Base(DeclarativeBase):
     pass
 
@@ -33,7 +55,7 @@ class ParkingSlot(Base):
     booked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
-engine = create_engine(DATABASE_URL, future=True)
+engine = _build_engine()
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
@@ -91,6 +113,54 @@ def health_check():
         return jsonify(health_status), 503
 
 
+@app.get("/metrics")
+def metrics():
+    """
+    Advanced monitoring endpoint with database pool stats and performance metrics.
+    """
+    metrics_data = {
+        "service": "smart-parking-system",
+        "database_type": "postgresql" if DATABASE_URL.startswith("postgresql://") else "sqlite",
+        "db_pool": {},
+        "db_version": "unknown",
+        "slots_summary": {},
+    }
+
+    try:
+        # Connection pool stats (if using pooled connection)
+        if hasattr(engine.pool, "checkedout"):
+            metrics_data["db_pool"] = {
+                "checked_out": engine.pool.checkedout(),
+                "total_size": engine.pool.size(),
+                "overflow": engine.pool.overflow(),
+            }
+
+        with SessionLocal() as session:
+            # Get total slot counts and status breakdown
+            total = session.query(ParkingSlot).count()
+            free = session.query(ParkingSlot).filter_by(status="free").count()
+            occupied = session.query(ParkingSlot).filter_by(status="occupied").count()
+
+            metrics_data["slots_summary"] = {
+                "total": total,
+                "free": free,
+                "occupied": occupied,
+                "availability_percentage": round((free / total * 100), 2) if total > 0 else 0,
+            }
+
+            # Get database version if Postgres
+            if DATABASE_URL.startswith("postgresql://"):
+                version = session.execute(text("SELECT version()")).scalar()
+                metrics_data["db_version"] = version
+
+        return jsonify(metrics_data), 200
+
+    except Exception as e:
+        metrics_data["status"] = "error"
+        metrics_data["error"] = str(e)
+        return jsonify(metrics_data), 503
+
+
 @app.get("/")
 def home():
     return jsonify(
@@ -98,6 +168,7 @@ def home():
             "message": "Smart Parking System API is running",
             "routes": [
                 "GET /health",
+                "GET /metrics",
                 "GET /slots",
                 "POST /book",
                 "POST /add-slot",
