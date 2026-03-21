@@ -1,89 +1,464 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smart Parking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f3ed;
+      --panel: #fffdf8;
+      --ink: #1f2a2c;
+      --muted: #596567;
+      --line: #d9ded8;
+      --brand: #0f766e;
+      --brand-strong: #115e59;
+      --accent: #d97706;
+      --ok: #166534;
+      --danger: #b91c1c;
+      --shadow: 0 20px 48px rgba(17, 24, 39, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(800px 500px at -5% -10%, #bfe8e2 0%, transparent 60%),
+        radial-gradient(680px 480px at 102% -10%, #fde8c8 0%, transparent 58%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1080px, 92vw);
+      margin: 26px auto 40px;
+      display: grid;
+      gap: 14px;
+      animation: fade-up 500ms ease;
+    }
+
+    .hero {
+      background: linear-gradient(125deg, #115e59 0%, #0f766e 55%, #0ea5a0 100%);
+      color: #f2fffd;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      right: -85px;
+      top: -85px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 34px);
+      letter-spacing: 0.2px;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      color: rgba(242, 255, 253, 0.88);
+      max-width: 58ch;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.12);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(12, 1fr);
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      animation: fade-up 600ms ease;
+    }
+
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-5 { grid-column: span 5; }
+    .span-12 { grid-column: span 12; }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .muted {
+      margin: -3px 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    input,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    textarea {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 11px;
+      background: #ffffff;
+      width: 100%;
+    }
+
+    textarea { resize: vertical; }
+
+    .w-half { flex: 1 1 210px; }
+    .w-full { width: 100%; }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #fff;
+      background: var(--brand);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      background: var(--brand-strong);
+      transform: translateY(-1px);
+    }
+
+    button.secondary { background: #475569; }
+    button.warn { background: var(--accent); }
+
+    .slots-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .free {
+      background: #dcfce7;
+      color: var(--ok);
+    }
+
+    .occupied {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    pre {
+      margin: 0;
+      min-height: 126px;
+      background: #111827;
+      color: #e5e7eb;
+      border-radius: 10px;
+      padding: 10px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .span-6, .span-7, .span-5 { grid-column: span 12; }
+      .hero-top { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <h1>Smart Parking Control Panel</h1>
+        <span id="apiBadge" class="badge">API: checking</span>
+      </div>
+      <p>Register users, sign in, and manage parking slots with a clean real-time workflow.</p>
+    </section>
 
-<h1>Smart Parking System</h1>
+    <section class="grid">
+      <article class="card span-6">
+        <h2>Register</h2>
+        <p class="muted">Create an account for the parking system.</p>
+        <div class="row">
+          <input id="regUser" class="w-half" placeholder="Username">
+          <input id="regPass" class="w-half" type="password" placeholder="Password">
+          <button onclick="registerUser()">Register</button>
+        </div>
+      </article>
 
-<h3>Register</h3>
-<input id="regUser" placeholder="Username">
-<input id="regPass" type="password" placeholder="Password">
-<button onclick="registerUser()">Register</button>
+      <article class="card span-6">
+        <h2>Login</h2>
+        <p class="muted">Get a JWT token and unlock protected actions.</p>
+        <div class="row">
+          <input id="logUser" class="w-half" placeholder="Username">
+          <input id="logPass" class="w-half" type="password" placeholder="Password">
+          <button onclick="loginUser()">Login</button>
+        </div>
+      </article>
 
-<h3>Login</h3>
-<input id="logUser" placeholder="Username">
-<input id="logPass" type="password" placeholder="Password">
-<button onclick="loginUser()">Login</button>
+      <article class="card span-12">
+        <h2>Access Token</h2>
+        <p class="muted">Paste or reuse your token. Stored in browser for convenience.</p>
+        <textarea id="tokenBox" rows="3" placeholder="JWT token"></textarea>
+        <div class="row" style="margin-top: 8px;">
+          <button onclick="saveToken()">Save Token</button>
+          <button class="secondary" onclick="clearToken()">Clear Token</button>
+        </div>
+      </article>
 
-<h3>Slots</h3>
-<button onclick="getSlots()">Load Slots</button>
-<ul id="slots"></ul>
+      <article class="card span-7">
+        <div class="slots-head">
+          <h2>Slots</h2>
+          <button class="secondary" onclick="getSlots()">Refresh</button>
+        </div>
+        <div id="slotsContainer">Loading...</div>
+      </article>
 
-<script>
-let token = "";
+      <article class="card span-5">
+        <h2>Actions</h2>
+        <p class="muted">Add a slot, then book or release by slot ID.</p>
+        <div class="row">
+          <input id="addLocation" class="w-full" placeholder="Location (e.g. Accra Mall)">
+          <button onclick="addSlot()">Add Slot</button>
+        </div>
+        <hr style="border:0;border-top:1px solid var(--line);margin:12px 0;">
+        <div class="row">
+          <input id="slotId" class="w-half" type="number" placeholder="Slot ID">
+          <button onclick="bookSlot()">Book</button>
+          <button class="warn" onclick="releaseSlot()">Release</button>
+        </div>
+      </article>
 
-async function registerUser() {
-  await fetch("/auth/register", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username: document.getElementById("regUser").value,
-      password: document.getElementById("regPass").value
-    })
-  });
-  alert("Registered!");
-}
+      <article class="card span-12">
+        <h2>Activity</h2>
+        <pre id="log"></pre>
+      </article>
+    </section>
+  </main>
 
-async function loginUser() {
-  const res = await fetch("/auth/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username: document.getElementById("logUser").value,
-      password: document.getElementById("logPass").value
-    })
-  });
-  const data = await res.json();
-  token = data.token || "";
-  alert(token ? "Logged in!" : "Login failed");
-}
+  <script>
+    const apiBadge = document.getElementById("apiBadge");
+    const logEl = document.getElementById("log");
+    const tokenBox = document.getElementById("tokenBox");
+    const slotsContainer = document.getElementById("slotsContainer");
 
-async function getSlots() {
-  const res = await fetch("/slots");
-  const data = await res.json();
+    let token = localStorage.getItem("smart_parking_token") || "";
+    tokenBox.value = token;
 
-  const list = document.getElementById("slots");
-  list.innerHTML = "";
+    function writeLog(message, payload) {
+      const entry = `[${new Date().toLocaleTimeString()}] ${message}` + (payload ? `\n${JSON.stringify(payload, null, 2)}` : "") + "\n\n";
+      logEl.textContent = entry + logEl.textContent;
+    }
 
-  data.forEach(slot => {
-    const li = document.createElement("li");
-    li.innerText = slot.location + " - " + slot.status;
+    async function requestJSON(url, options = {}) {
+      const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const response = await fetch(url, { ...options, headers });
 
-    const btn = document.createElement("button");
-    btn.innerText = "Book";
-    btn.onclick = () => book(slot.id);
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = { message: "Non-JSON response" };
+      }
 
-    li.appendChild(btn);
-    list.appendChild(li);
-  });
-}
+      if (!response.ok) {
+        throw { status: response.status, data };
+      }
+      return data;
+    }
 
-async function book(id) {
-  await fetch("/book", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": token
-    },
-    body: JSON.stringify({ id })
-  });
-  getSlots();
-}
-</script>
+    function saveToken() {
+      token = tokenBox.value.trim();
+      localStorage.setItem("smart_parking_token", token);
+      writeLog("Token saved manually");
+    }
 
+    function clearToken() {
+      token = "";
+      tokenBox.value = "";
+      localStorage.removeItem("smart_parking_token");
+      writeLog("Token cleared");
+    }
+
+    async function registerUser() {
+      try {
+        const payload = {
+          username: document.getElementById("regUser").value.trim(),
+          password: document.getElementById("regPass").value
+        };
+        const data = await requestJSON("/auth/register", { method: "POST", body: JSON.stringify(payload) });
+        writeLog("Register success", data);
+      } catch (err) {
+        writeLog("Register failed", err);
+      }
+    }
+
+    async function loginUser() {
+      try {
+        const payload = {
+          username: document.getElementById("logUser").value.trim(),
+          password: document.getElementById("logPass").value
+        };
+        const data = await requestJSON("/auth/login", { method: "POST", body: JSON.stringify(payload) });
+        token = data.token || "";
+        tokenBox.value = token;
+        localStorage.setItem("smart_parking_token", token);
+        writeLog("Login success", { hasToken: Boolean(token) });
+      } catch (err) {
+        writeLog("Login failed", err);
+      }
+    }
+
+    function renderSlots(slots) {
+      if (!Array.isArray(slots) || slots.length === 0) {
+        slotsContainer.innerHTML = "<p>No slots available.</p>";
+        return;
+      }
+
+      const rows = slots.map((slot) => {
+        const chip = slot.status === "free" ? "free" : "occupied";
+        return `<tr>
+          <td>${slot.id}</td>
+          <td>${slot.location}</td>
+          <td><span class="chip ${chip}">${slot.status}</span></td>
+          <td><button onclick="quickBook(${slot.id})">Book</button></td>
+        </tr>`;
+      }).join("");
+
+      slotsContainer.innerHTML = `
+        <table>
+          <thead><tr><th>ID</th><th>Location</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    async function getSlots() {
+      try {
+        const data = await requestJSON("/slots", { method: "GET", headers: {} });
+        renderSlots(data);
+        apiBadge.textContent = "API: connected";
+      } catch (err) {
+        apiBadge.textContent = "API: error";
+        writeLog("Load slots failed", err);
+      }
+    }
+
+    async function addSlot() {
+      try {
+        const location = document.getElementById("addLocation").value.trim();
+        const data = await requestJSON("/add-slot", {
+          method: "POST",
+          body: JSON.stringify({ location })
+        });
+        writeLog("Add slot success", data);
+        getSlots();
+      } catch (err) {
+        writeLog("Add slot failed", err);
+      }
+    }
+
+    async function bookSlot() {
+      const id = Number(document.getElementById("slotId").value);
+      await bookById(id);
+    }
+
+    async function quickBook(id) {
+      await bookById(id);
+    }
+
+    async function bookById(id) {
+      try {
+        const data = await requestJSON("/book", {
+          method: "POST",
+          body: JSON.stringify({ id })
+        });
+        writeLog("Book success", data);
+        getSlots();
+      } catch (err) {
+        writeLog("Book failed", err);
+      }
+    }
+
+    async function releaseSlot() {
+      try {
+        const id = Number(document.getElementById("slotId").value);
+        const data = await requestJSON("/release-slot", {
+          method: "POST",
+          body: JSON.stringify({ id })
+        });
+        writeLog("Release success", data);
+        getSlots();
+      } catch (err) {
+        writeLog("Release failed", err);
+      }
+    }
+
+    getSlots();
+  </script>
 </body>
 </html>
