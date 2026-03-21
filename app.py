@@ -65,12 +65,39 @@ def init_db() -> None:
 init_db()
 
 
+@app.get("/health")
+def health_check():
+    """
+    Health check endpoint that verifies database connectivity.
+    Returns 200 if healthy, 503 if database is unreachable.
+    """
+    health_status = {
+        "status": "ok",
+        "database": "unknown",
+        "database_url": DATABASE_URL.split("@")[0] if "@" in DATABASE_URL else "sqlite",
+    }
+
+    try:
+        with SessionLocal() as session:
+            # Simple query to verify DB connectivity
+            count = session.query(ParkingSlot).count()
+            health_status["database"] = "connected"
+            health_status["total_slots"] = count
+            return jsonify(health_status), 200
+    except Exception as e:
+        health_status["status"] = "degraded"
+        health_status["database"] = "disconnected"
+        health_status["error"] = str(e)
+        return jsonify(health_status), 503
+
+
 @app.get("/")
 def home():
     return jsonify(
         {
             "message": "Smart Parking System API is running",
             "routes": [
+                "GET /health",
                 "GET /slots",
                 "POST /book",
                 "POST /add-slot",
