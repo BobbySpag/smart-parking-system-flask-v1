@@ -48,9 +48,14 @@ APPLE_CLIENT_SECRET = os.getenv("APPLE_CLIENT_SECRET", "")
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 Session = scoped_session(sessionmaker(bind=engine))
-session = Session()
+session = Session
 
 Base = declarative_base()
+
+
+@app.teardown_appcontext
+def shutdown_session(_exception=None):
+    Session.remove()
 
 
 class ParkingSlot(Base):
@@ -315,6 +320,8 @@ def _release_expired_bookings():
     changed = False
 
     for booking in active_bookings:
+        if booking is None:
+            continue
         booked_at = _parse_iso_datetime(booking.booked_at)
         if booked_at is None or booked_at > expiry_cutoff:
             continue

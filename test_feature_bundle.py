@@ -1,9 +1,10 @@
 import time
 import unittest
+import datetime
 
 import jwt
 
-from app import app, limiter
+from app import app, Booking, limiter, session
 
 SECRET_KEY = app.config["SECRET_KEY"]
 
@@ -54,6 +55,33 @@ class FeatureBundleTests(unittest.TestCase):
         data = res.get_json()
         self.assertIn("totals", data)
         self.assertIn("slots", data["totals"])
+
+    def test_realtime_summary_releases_expired_booking(self):
+        self._top_up(200)
+        slot = self._first_free_slot()
+        booked = self._book(slot["id"], hours=1)
+        self.assertEqual(booked.status_code, 200)
+
+        booking_id = booked.get_json()["booking_id"]
+        booking = session.get(Booking, booking_id)
+        self.assertIsNotNone(booking)
+        booking.booked_at = (
+            datetime.datetime.now(datetime.UTC) - datetime.timedelta(minutes=31)
+        ).replace(tzinfo=None).isoformat()
+        session.commit()
+
+        res = self.client.get("/realtime/summary")
+        self.assertEqual(res.status_code, 200)
+
+        session.expire_all()
+        booking = session.get(Booking, booking_id)
+        self.assertIsNotNone(booking)
+        self.assertEqual(booking.status, "expired")
+
+        slots = self.client.get("/slots")
+        self.assertEqual(slots.status_code, 200)
+        refreshed = next(s for s in slots.get_json() if s["id"] == slot["id"])
+        self.assertEqual(refreshed["status"], "free")
 
     def test_profile_update(self):
         new_email = f"{self.username}@example.com"
