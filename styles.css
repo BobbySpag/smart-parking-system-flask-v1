@@ -1,13 +1,39 @@
+/* ── Theme tokens ─────────────────────────────────────────────── */
+:root {
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --bg-card-alt: #162032;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --input-bg: #f8fafc;
+  --input-color: #0f172a;
+  --header-bg: #0f172a;
+}
+
+[data-theme="light"] {
+  --bg: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f8fafc;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --border: #e2e8f0;
+  --input-bg: #ffffff;
+  --input-color: #0f172a;
+  --header-bg: #1e293b;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   font-family: Arial, sans-serif;
-  background: #0f172a;
-  color: white;
+  background: var(--bg);
+  color: var(--text);
   margin: 0;
   padding: 0;
+  transition: background 0.25s, color 0.25s;
 }
 
 body.busy {
@@ -481,12 +507,14 @@ body.busy {
 }
 
 .card {
-  background: #1e293b;
+  background: var(--bg-card);
+  color: var(--text);
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 20px;
   width: 100%;
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+  transition: background 0.25s, color 0.25s;
 }
 
 .card h3 {
@@ -1059,6 +1087,10 @@ body.busy .loading-overlay {
     align-items: stretch;
   }
 
+  .theme-toggle {
+    align-self: flex-start;
+  }
+
   .wallet-badge,
   .logout-btn,
   .hours-select,
@@ -1094,6 +1126,63 @@ body.busy .loading-overlay {
   }
 }
 
+/* Theme toggle button */
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Empty state placeholder */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 12px;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.empty-state-text {
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Countdown chip */
+.countdown-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: rgba(245,158,11,0.15);
+  color: #f59e0b;
+  margin-left: 4px;
+}
+
+.countdown-chip.urgent {
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+}
+
 /* Retry payment form */
 .retry-payment-wrap {
   margin-bottom: 8px;
@@ -1125,3 +1214,4 @@ body.busy .loading-overlay {
   flex-wrap: wrap;
   margin-bottom: 4px;
 }
+

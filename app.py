@@ -1,12 +1,15 @@
 from flask import Flask, jsonify, redirect, request, send_file, send_from_directory, url_for
 from authlib.integrations.flask_client import OAuth
 from sqlalchemy import create_engine, Column, Integer, String, Float, text
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 from flask_bcrypt import Bcrypt
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from functools import wraps
 import datetime
 import jwt
 import os
+import re
 import requests as http_requests
 from urllib.parse import urlencode
 from dotenv import load_dotenv
@@ -18,6 +21,12 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "change-this-secret-in-production")
 bcrypt = Bcrypt(app)
 oauth = OAuth(app)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://",
+)
 
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///local.db")
@@ -37,8 +46,8 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 APPLE_CLIENT_ID = os.getenv("APPLE_CLIENT_ID", "")
 APPLE_CLIENT_SECRET = os.getenv("APPLE_CLIENT_SECRET", "")
 
-engine = create_engine(DATABASE_URL)
-Session = sessionmaker(bind=engine)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+Session = scoped_session(sessionmaker(bind=engine))
 session = Session()
 
 Base = declarative_base()
@@ -490,6 +499,7 @@ def admin_required(f):
 
 
 @app.route("/auth/register", methods=["POST"])
+@limiter.limit("10 per minute")
 def register_user():
     data = request.json or {}
     username = str(data.get("username", "")).strip().lower()
@@ -497,6 +507,10 @@ def register_user():
 
     if not username or not password:
         return jsonify({"message": "username and password are required"}), 400
+    if len(username) < 3 or len(username) > 40:
+        return jsonify({"message": "Username must be 3–40 characters"}), 400
+    if len(password) < 6 or len(password) > 128:
+        return jsonify({"message": "Password must be 6–128 characters"}), 400
 
     existing = session.query(User).filter_by(username=username).first()
     if existing:
@@ -516,10 +530,14 @@ def register_user():
 
 
 @app.route("/auth/login", methods=["POST"])
+@limiter.limit("10 per minute")
 def login_user():
     data = request.json or {}
     username = str(data.get("username", "")).strip().lower()
     password = str(data.get("password", ""))
+
+    if not username or not password:
+        return jsonify({"message": "Invalid credentials"}), 401
 
     user = session.query(User).filter_by(username=username).first()
 
@@ -692,17 +710,21 @@ def admin_delete_slot():
 
 @app.route("/book", methods=["POST"])
 @token_required
+@limiter.limit("30 per minute")
 def book_slot():
     _release_expired_bookings()
     payload, _ = _decode_token()
     data = request.json or {}
     slot_id = data.get("id")
-    hours = float(data.get("hours", 1))
-
     if slot_id is None:
         return jsonify({"message": "Slot id is required"}), 400
-    if hours <= 0 or hours > 24:
-        return jsonify({"message": "Hours must be between 1 and 24"}), 400
+    try:
+        slot_id = int(slot_id)
+        hours = float(data.get("hours", 1))
+    except (TypeError, ValueError):
+        return jsonify({"message": "Invalid slot id or hours"}), 400
+    if hours < 0.5 or hours > 24:
+        return jsonify({"message": "Hours must be between 0.5 and 24"}), 400
 
     slot = session.get(ParkingSlot, slot_id)
     if not slot or slot.status != "free":
@@ -764,12 +786,16 @@ def release_slot():
 
 @app.route("/top-up", methods=["POST"])
 @token_required
+@limiter.limit("20 per minute")
 def top_up():
     payload, _ = _decode_token()
     data = request.json or {}
-    amount = float(data.get("amount", 0))
+    try:
+        amount = float(data.get("amount", 0))
+    except (TypeError, ValueError):
+        return jsonify({"message": "Invalid amount"}), 400
 
-    if amount <= 0 or amount > 500:
+    if amount < 1 or amount > 500:
         return jsonify({"message": "Amount must be between 1 and 500 GHS"}), 400
 
     user = session.get(User, payload.get("user_id"))
@@ -1173,8 +1199,12 @@ def payment_submit_otp():
         return jsonify({"message": f"OTP error: {e}"}), 502
 
 
+_REFERENCE_RE = re.compile(r'^[A-Za-z0-9_\-]{4,100}$')
+
+
 @app.route("/payment/verify", methods=["POST"])
 @token_required
+@limiter.limit("5 per minute")
 def payment_verify():
     """Manual fallback: verify a Paystack reference and credit wallet."""
     if not PAYSTACK_SECRET:
@@ -1184,8 +1214,8 @@ def payment_verify():
     data = request.json or {}
     reference = str(data.get("reference", "")).strip()
 
-    if not reference:
-        return jsonify({"message": "Reference required"}), 400
+    if not reference or not _REFERENCE_RE.match(reference):
+        return jsonify({"message": "Invalid reference format"}), 400
 
     existing = session.query(Payment).filter_by(reference=reference).first()
     if existing:

@@ -27,6 +27,7 @@
           <div id="balanceDisplay" class="wallet-badge-amount">GHS 0.00</div>
         </div>
         <button id="logoutBtn" class="ghost-btn logout-btn" type="button" onclick="logoutUser()" hidden>Logout</button>
+        <button class="theme-toggle" type="button" onclick="toggleTheme()" id="themeToggleBtn" aria-label="Toggle colour theme">☀️ Light</button>
       </div>
     </div>
   </div>
@@ -311,10 +312,27 @@ let balance = 0;
 let userLat = null, userLng = null;
 let userMarker = null;
 let slotsPoller = null;
+let countdownPoller = null;
 let lastSlotsSignature = "";
 let hasLoadedSlotsOnce = false;
 let pendingRequests = 0;
 let slotsRequestInFlight = false;
+
+// --- Theme ---
+function _applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const btn = document.getElementById("themeToggleBtn");
+  if (btn) btn.textContent = theme === "light" ? "🌙 Dark" : "☀️ Light";
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "dark";
+  const next = current === "light" ? "dark" : "light";
+  localStorage.setItem("smart_parking_theme", next);
+  _applyTheme(next);
+}
+
+_applyTheme(localStorage.getItem("smart_parking_theme") || "dark");
 
 function setElementHidden(elementId, shouldHide) {
   const element = document.getElementById(elementId);
@@ -394,9 +412,21 @@ function formatExpiryLabel(isoString) {
   const expiresAt = formatUtcDate(isoString);
   if (!expiresAt) return "";
   const diffMs = expiresAt.getTime() - Date.now();
-  if (diffMs <= 0) return "Auto-releasing now";
-  const totalMinutes = Math.ceil(diffMs / 60000);
-  return `Auto-releases in ${totalMinutes} min`;
+  if (diffMs <= 0) return "Releasing now";
+  const totalSecs = Math.ceil(diffMs / 1000);
+  const m = Math.floor(totalSecs / 60);
+  const s = totalSecs % 60;
+  return m > 0 ? `${m}m ${s.toString().padStart(2,"0")}s` : `${s}s`;
+}
+
+function _isUrgent(isoString) {
+  const expiresAt = formatUtcDate(isoString);
+  if (!expiresAt) return false;
+  return (expiresAt.getTime() - Date.now()) < 5 * 60 * 1000; // under 5 min
+}
+
+function _emptyState(icon, text) {
+  return `<li class="booking-empty"><div class="empty-state"><div class="empty-state-icon">${icon}</div><div class="empty-state-text">${text}</div></div></li>`;
 }
 
 function buildSlotsSignature(slots) {
@@ -453,6 +483,18 @@ function startLiveUpdates() {
       }
     }
   }, 5000);
+  // Tick countdown chips every second
+  countdownPoller = setInterval(_tickCountdowns, 1000);
+}
+
+function _tickCountdowns() {
+  document.querySelectorAll("[data-expires-at]").forEach(el => {
+    const iso = el.getAttribute("data-expires-at");
+    const label = formatExpiryLabel(iso);
+    const urgent = _isUrgent(iso);
+    el.textContent = label ? `\u23f1 ${label}` : "";
+    el.classList.toggle("urgent", urgent);
+  });
 }
 
 // --- UI helpers ---
@@ -773,7 +815,7 @@ async function loadPaymentHistory() {
   const { response, data } = await fetchJson("/payments/history", { headers: authHeaders() }, { showLoader: false });
   if (!response.ok) return;
   if (!data.length) {
-    list.innerHTML = '<li class="booking-empty">No payment history yet.</li>';
+    list.innerHTML = _emptyState("💸", "No payment history yet.");
     return;
   }
   list.innerHTML = data.map(item => `
@@ -826,7 +868,7 @@ async function loadNotifications() {
   if (!response.ok) return;
   const items = data.items || [];
   if (!items.length) {
-    list.innerHTML = '<li class="booking-empty">No new notifications.</li>';
+    list.innerHTML = _emptyState("🔔", "You're all caught up — no new notifications.");
     return;
   }
   list.innerHTML = items.map(item => `
@@ -1015,14 +1057,17 @@ async function loadMyBookings() {
   if (!response.ok) return;
   const list = document.getElementById("myBookingsList");
   if (!bookings.length) {
-    list.innerHTML = '<li class="booking-empty">No bookings yet.</li>';
+    list.innerHTML = _emptyState("🅿️", "No bookings yet.\nBook a slot to get started.");
     return;
   }
   list.innerHTML = bookings.map(b => {
     const badge = b.status === "active"
       ? '<span class="booking-badge booking-badge-active">ACTIVE</span>'
       : `<span class="booking-badge booking-badge-muted">${b.status}</span>`;
-    const expiry = b.expires_at ? ` · ${formatExpiryLabel(b.expires_at)}` : "";
+    const expiryAttr = (b.status === "active" && b.expires_at) ? `data-expires-at="${b.expires_at}"` : "";
+    const expiryChip = (b.status === "active" && b.expires_at)
+      ? `<span class="countdown-chip${_isUrgent(b.expires_at) ? " urgent" : ""}" ${expiryAttr}>⏱ ${formatExpiryLabel(b.expires_at)}</span>`
+      : "";
     const actions = b.status === "active"
       ? `<div class="booking-actions">
           <button type="button" class="ghost-btn" onclick="extendBooking(${b.id})">+1h</button>
@@ -1030,8 +1075,8 @@ async function loadMyBookings() {
         </div>`
       : "";
     return `<li class="booking-item">
-      <strong>${b.location}</strong> ${badge}<br>
-      <span class="booking-meta">${b.hours}hr · GHS ${b.amount.toFixed(2)} · ${b.booked_at ? b.booked_at.slice(0,16).replace("T"," ") : ""}${expiry}</span>
+      <strong>${b.location}</strong> ${badge}${expiryChip}<br>
+      <span class="booking-meta">${b.hours}hr · GHS ${b.amount.toFixed(2)} · ${b.booked_at ? b.booked_at.slice(0,16).replace("T"," ") : ""}</span>
       ${actions}
     </li>`;
   }).join("");
