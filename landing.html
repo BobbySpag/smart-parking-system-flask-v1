@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ParkAccra — Smarter Parking for Ghana</title>
+  <title>ParkHub — Smarter Parking for Ghana</title>
   <meta name="description" content="Find, book, and pay for parking in Accra in seconds. Real-time spots, mobile money payments, GPS directions." />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,6 +33,7 @@
       display: flex; justify-content: space-between; align-items: center;
       padding: 16px 40px;
       background: rgba(10,15,26,0.92);
+      -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
@@ -137,6 +138,107 @@
     }
     .traction-card .num { font-size: 44px; font-weight: 900; color: var(--green); line-height: 1; }
     .traction-card .label { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+    .availability-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .availability-card {
+      background: linear-gradient(180deg, rgba(14,165,233,0.08), rgba(17,24,39,1));
+      border: 1px solid rgba(14,165,233,0.22);
+      border-radius: 16px;
+      padding: 26px;
+    }
+    .availability-card .eyebrow { font-size: 12px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); }
+    .availability-card .big { font-size: 42px; font-weight: 900; color: var(--green); line-height: 1; margin: 10px 0 8px; }
+    .availability-card .small { color: var(--muted); font-size: 13px; }
+    .availability-list { list-style: none; margin-top: 18px; display: grid; gap: 10px; }
+    .availability-list li {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      padding-top: 10px; border-top: 1px solid rgba(148,163,184,0.12); font-size: 13px;
+    }
+    .availability-status {
+      border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 800;
+      text-transform: uppercase;
+    }
+    .availability-status.free { background: rgba(34,197,94,0.14); color: #86efac; }
+    .availability-status.occupied { background: rgba(239,68,68,0.14); color: #fca5a5; }
+    .availability-meta { margin-top: 18px; color: var(--muted); font-size: 13px; }
+
+    .solution-section-bg {
+      background: linear-gradient(180deg, transparent, rgba(34,197,94,0.04), transparent);
+    }
+
+    .tech-feature-card,
+    .funds-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+
+    .tech-feature-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .tech-feature-text,
+    .funds-card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .stack-wrap {
+      margin-top: 28px;
+    }
+
+    .stack-label {
+      margin-bottom: 12px;
+    }
+
+    .funds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .funds-card {
+      text-align: center;
+    }
+
+    .funds-card-percent {
+      font-size: 32px;
+      font-weight: 900;
+    }
+
+    .funds-card-percent.green {
+      color: var(--green);
+    }
+
+    .funds-card-percent.blue {
+      color: var(--blue);
+    }
+
+    .funds-card-percent.amber {
+      color: #f59e0b;
+    }
+
+    .funds-card-percent.violet {
+      color: #a78bfa;
+    }
+
+    .funds-card-title {
+      font-weight: 700;
+      margin: 8px 0;
+    }
+
+    .invest-label {
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
 
     /* ── TECH STACK ── */
     .tech-list {
@@ -246,7 +348,7 @@
 </section>
 
 <!-- ── HOW IT WORKS ── -->
-<section class="section" id="solution" style="background: linear-gradient(180deg, transparent, rgba(34,197,94,0.04), transparent);">
+<section class="section solution-section-bg" id="solution">
   <div class="section-label">Our Solution</div>
   <h2>Parking in 3 Taps</h2>
   <p class="section-sub">A mobile-first platform that removes all friction — from discovery to payment.</p>
@@ -337,29 +439,29 @@
   <h2>Production-Ready from Day One</h2>
   <p class="section-sub">Built on a modern, scalable stack — already live and accepting real bookings.</p>
   <div class="grid-4">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px">
-      <div style="font-size:24px;margin-bottom:10px">🗺️</div>
+    <div class="tech-feature-card">
+      <div class="tech-feature-icon">🗺️</div>
       <strong>Real-Time Map</strong>
-      <p style="font-size:13px;color:var(--muted);margin-top:6px">Leaflet.js + OpenStreetMap with live GPS markers. Haversine distance sorting. One-tap Google Maps directions.</p>
+      <p class="tech-feature-text">Leaflet.js + OpenStreetMap with live GPS markers. Haversine distance sorting. One-tap Google Maps directions.</p>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px">
-      <div style="font-size:24px;margin-bottom:10px">💳</div>
+    <div class="tech-feature-card">
+      <div class="tech-feature-icon">💳</div>
       <strong>Mobile Money</strong>
-      <p style="font-size:13px;color:var(--muted);margin-top:6px">Paystack integration — MTN MoMo, Vodafone Cash, AirtelTigo. OTP flow. Idempotent payment records prevent double-charging.</p>
+      <p class="tech-feature-text">Paystack integration — MTN MoMo, Vodafone Cash, AirtelTigo. OTP flow. Idempotent payment records prevent double-charging.</p>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px">
-      <div style="font-size:24px;margin-bottom:10px">🔐</div>
+    <div class="tech-feature-card">
+      <div class="tech-feature-icon">🔐</div>
       <strong>Secure Auth</strong>
-      <p style="font-size:13px;color:var(--muted);margin-top:6px">JWT tokens, bcrypt password hashing, role-based access control (user / admin). OWASP-compliant inputs.</p>
+      <p class="tech-feature-text">JWT tokens, bcrypt password hashing, role-based access control (user / admin). OWASP-compliant inputs.</p>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px">
-      <div style="font-size:24px;margin-bottom:10px">☁️</div>
+    <div class="tech-feature-card">
+      <div class="tech-feature-icon">☁️</div>
       <strong>Cloud-Ready</strong>
-      <p style="font-size:13px;color:var(--muted);margin-top:6px">Flask + PostgreSQL on Railway. Automated schema migrations. Procfile for instant Heroku / Render deploy.</p>
+      <p class="tech-feature-text">Flask + PostgreSQL on Railway. Automated schema migrations. Procfile for instant Heroku / Render deploy.</p>
     </div>
   </div>
-  <div style="margin-top:28px">
-    <div class="section-label" style="margin-bottom:12px">Stack</div>
+  <div class="stack-wrap">
+    <div class="section-label stack-label">Stack</div>
     <div class="tech-list">
       <span class="tech-pill">Python / Flask</span>
       <span class="tech-pill">SQLAlchemy + PostgreSQL</span>
@@ -401,38 +503,47 @@
   </div>
 </section>
 
+<!-- ── LIVE AVAILABILITY ── -->
+<section class="section">
+  <div class="section-label">Live Availability</div>
+  <h2>Active Spots Across Accra Destinations</h2>
+  <p class="section-sub">Real-time free parking counts for universities, event centers, hostels, and market places in Accra.</p>
+  <div id="availabilityGrid" class="availability-grid"></div>
+  <p id="availabilityMeta" class="availability-meta">Syncing live availability from Accra...</p>
+</section>
+
 <!-- ── USE OF FUNDS ── -->
 <section class="section">
   <div class="section-label">Use of Funds</div>
   <h2>$250K Pre-Seed Ask</h2>
   <p class="section-sub">We have a working product and paying lots. Capital will accelerate expansion and partnerships.</p>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
-      <div style="font-size:32px;font-weight:900;color:var(--green)">40%</div>
-      <div style="font-weight:700;margin:8px 0">Engineering</div>
-      <div style="font-size:13px;color:var(--muted)">Mobile app (Flutter), backend scaling, IoT sensor integration</div>
+  <div class="funds-grid">
+    <div class="funds-card">
+      <div class="funds-card-percent green">40%</div>
+      <div class="funds-card-title">Engineering</div>
+      <div class="funds-card-desc">Mobile app (Flutter), backend scaling, IoT sensor integration</div>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
-      <div style="font-size:32px;font-weight:900;color:var(--blue)">30%</div>
-      <div style="font-weight:700;margin:8px 0">Sales & Ops</div>
-      <div style="font-size:13px;color:var(--muted)">Lot operator partnerships, field team for onboarding 50+ lots</div>
+    <div class="funds-card">
+      <div class="funds-card-percent blue">30%</div>
+      <div class="funds-card-title">Sales & Ops</div>
+      <div class="funds-card-desc">Lot operator partnerships, field team for onboarding 50+ lots</div>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
-      <div style="font-size:32px;font-weight:900;color:#f59e0b)">20%</div>
-      <div style="font-weight:700;margin:8px 0">Marketing</div>
-      <div style="font-size:13px;color:var(--muted)">Driver acquisition, social campaigns, university partnerships</div>
+    <div class="funds-card">
+      <div class="funds-card-percent amber">20%</div>
+      <div class="funds-card-title">Marketing</div>
+      <div class="funds-card-desc">Driver acquisition, social campaigns, university partnerships</div>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
-      <div style="font-size:32px;font-weight:900;color:#a78bfa">10%</div>
-      <div style="font-weight:700;margin:8px 0">Legal & Compliance</div>
-      <div style="font-size:13px;color:var(--muted)">Licensing, Bank of Ghana MoMo compliance, IP registration</div>
+    <div class="funds-card">
+      <div class="funds-card-percent violet">10%</div>
+      <div class="funds-card-title">Legal & Compliance</div>
+      <div class="funds-card-desc">Licensing, Bank of Ghana MoMo compliance, IP registration</div>
     </div>
   </div>
 </section>
 
 <!-- ── INVESTMENT CTA ── -->
 <div class="invest-section" id="invest">
-  <div class="section-label" style="margin-bottom:16px">🚀 Fundraising Now</div>
+  <div class="section-label invest-label">🚀 Fundraising Now</div>
   <h2>Join Our Pre-Seed Round</h2>
   <p>We're raising $250K to expand to 5 Ghanaian cities, integrate with DVLA for vehicle data, and build a native mobile app. Early investors receive 2× liquidation preference and board observer seats.</p>
   <div class="invest-btns">
@@ -451,7 +562,7 @@
 <!-- ── FOOTER ── -->
 <footer>
   <div>© 2025 <strong>ParkAccra</strong> · Ghana's Smart Parking Platform</div>
-  <div style="display:flex;gap:20px;flex-wrap:wrap">
+  <div class="footer-links">
     <a href="/app">Launch App</a>
     <a href="mailto:hello@parkaccra.app">hello@parkaccra.app</a>
     <a href="mailto:invest@parkaccra.app">invest@parkaccra.app</a>
@@ -472,7 +583,42 @@ async function loadTraction() {
     document.getElementById("liveSpotsHero").innerText = total + "+";
   } catch(e) { /* silently ignore on static preview */ }
 }
+
+function renderAvailabilityCard(category) {
+  const spots = category.spots.slice(0, 3).map(spot => `
+    <li>
+      <span>${spot.location}</span>
+      <span class="availability-status ${spot.status === "free" ? "free" : "occupied"}">${spot.status}</span>
+    </li>
+  `).join("") || `<li><span>No live spots yet</span><span class="availability-status occupied">waiting</span></li>`;
+
+  return `
+    <article class="availability-card">
+      <div class="eyebrow">${category.label}</div>
+      <div class="big">${category.available}</div>
+      <div class="small">available now out of ${category.total} tracked locations</div>
+      <ul class="availability-list">${spots}</ul>
+    </article>
+  `;
+}
+
+async function loadLiveAvailability() {
+  try {
+    const res = await fetch("/live-availability");
+    if (!res.ok) return;
+    const data = await res.json();
+    const grid = document.getElementById("availabilityGrid");
+    grid.innerHTML = data.categories.map(renderAvailabilityCard).join("");
+    const updated = new Date(data.updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    document.getElementById("availabilityMeta").innerText = `Last updated ${updated} · Live across ${data.city}`;
+  } catch (e) {
+    document.getElementById("availabilityMeta").innerText = "Unable to load live availability right now.";
+  }
+}
+
 loadTraction();
+loadLiveAvailability();
+setInterval(loadLiveAvailability, 5000);
 </script>
 
 </body>

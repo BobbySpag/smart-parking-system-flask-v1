@@ -17,34 +17,173 @@
         <h1>Smart Parking</h1>
         <p>Find and book parking in Accra</p>
       </div>
-      <div id="walletBadge" style="display:none;text-align:right">
-        <div style="font-size:12px;opacity:0.8">Wallet Balance</div>
-        <div id="balanceDisplay" style="font-size:24px;font-weight:bold">GHS 0.00</div>
+      <div class="header-actions">
+        <div id="userBadge" class="user-badge" aria-live="polite" hidden>
+          <div class="user-badge-label">Signed in as</div>
+          <div id="userIdentity" class="user-badge-identity">Guest</div>
+        </div>
+        <div id="walletBadge" class="wallet-badge" hidden>
+          <div class="wallet-badge-label">Wallet Balance</div>
+          <div id="balanceDisplay" class="wallet-badge-amount">GHS 0.00</div>
+        </div>
+        <button id="logoutBtn" class="ghost-btn logout-btn" type="button" onclick="logoutUser()" hidden>Logout</button>
       </div>
     </div>
   </div>
 
-  <p id="status"></p>
+  <main id="authShell" class="auth-shell">
+    <section class="login-side">
+      <a href="#" class="brand-link" title="Go to homepage" aria-label="Go to homepage">
+        <span class="brand-badge">O</span>
+        <span class="brand-word">Oman</span>
+      </a>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Register</h3>
-      <input id="regUser" placeholder="Username">
-      <input id="regPass" type="password" placeholder="Password">
-      <button onclick="registerUser()">Register</button>
-    </div>
+      <div class="auth-card">
+        <div class="auth-toggle" role="tablist" aria-label="Authentication mode switch">
+          <button id="loginTab" class="toggle-btn active" type="button" role="tab" aria-selected="true" aria-controls="loginPanel" onclick="setAuthMode('login')">Login</button>
+          <button id="registerTab" class="toggle-btn" type="button" role="tab" aria-selected="false" aria-controls="registerPanel" onclick="setAuthMode('register')">Create account</button>
+        </div>
 
-    <div class="card">
-      <h3>Login</h3>
-      <input id="logUser" placeholder="Username">
-      <input id="logPass" type="password" placeholder="Password">
-      <button onclick="loginUser()">Login</button>
-    </div>
-  </div>
+        <div id="status" class="status-banner"></div>
 
+        <div id="loginPanel" class="auth-panel active" role="tabpanel" aria-labelledby="loginTab">
+          <div class="login-welcome-row">
+            <h2>Welcome back 👏</h2>
+            <p>Please enter your details to continue booking parking in Accra.</p>
+          </div>
+
+          <div class="socials-row">
+            <button type="button" class="social-btn" onclick="startOAuth('google')">
+              <span class="social-icon">G</span>
+              <span>Log in with Google</span>
+            </button>
+            <button type="button" class="social-btn" onclick="startOAuth('apple')">
+              <span class="social-icon"></span>
+              <span>Log in with Apple</span>
+            </button>
+          </div>
+
+          <div class="divider" role="separator" aria-label="or continue with username and password">
+            <span class="divider-line"></span>
+            <span>or</span>
+            <span class="divider-line"></span>
+          </div>
+
+          <form id="loginForm" class="auth-form" novalidate>
+            <div class="text-field">
+              <label for="loginUsername">Username</label>
+              <div class="input-wrapper">
+                <input id="loginUsername" name="username" autocomplete="username" placeholder="Enter your username">
+              </div>
+              <div id="loginUsername-error" class="field-error"></div>
+            </div>
+
+            <div class="text-field">
+              <label for="loginPassword">Password</label>
+              <div class="input-wrapper">
+                <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password">
+              </div>
+              <div id="loginPassword-error" class="field-error"></div>
+            </div>
+
+            <button id="loginSubmit" type="submit" class="auth-submit" aria-label="Submit login form" aria-busy="false">
+              <span class="btn-spinner" aria-hidden="true"></span>
+              <span class="btn-label">Login</span>
+            </button>
+
+            <div class="auth-links">
+              <a href="#" onclick="event.preventDefault(); resetPassword();">Forgot password?</a>
+              <a href="#" onclick="event.preventDefault(); setAuthMode('register');">Create account</a>
+            </div>
+          </form>
+        </div>
+
+        <div id="registerPanel" class="auth-panel" role="tabpanel" aria-labelledby="registerTab">
+          <div class="login-welcome-row">
+            <h2>Create your account</h2>
+            <p>Start reserving parking around universities, malls, markets, and event centers.</p>
+          </div>
+
+          <form id="registerForm" class="auth-form" novalidate>
+            <div class="text-field">
+              <label for="registerUsername">Username</label>
+              <div class="input-wrapper">
+                <input id="registerUsername" name="username" autocomplete="username" placeholder="Choose a username">
+              </div>
+              <div id="registerUsername-error" class="field-error"></div>
+            </div>
+
+            <div class="text-field">
+              <label for="registerPassword">Password</label>
+              <div class="input-wrapper">
+                <input id="registerPassword" name="password" type="password" autocomplete="new-password" placeholder="Create a password">
+              </div>
+              <div id="registerPassword-error" class="field-error"></div>
+            </div>
+
+            <div class="text-field">
+              <label for="registerConfirmPassword">Confirm password</label>
+              <div class="input-wrapper">
+                <input id="registerConfirmPassword" name="confirm-password" type="password" autocomplete="new-password" placeholder="Repeat your password">
+              </div>
+              <div id="registerConfirmPassword-error" class="field-error"></div>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="auth-submit" aria-label="Submit registration form" aria-busy="false">
+              <span class="btn-spinner" aria-hidden="true"></span>
+              <span class="btn-label">Create account</span>
+            </button>
+
+            <div class="auth-links">
+              <a href="#" onclick="event.preventDefault(); startOAuth('google');">Continue with Google</a>
+              <a href="#" onclick="event.preventDefault(); setAuthMode('login');">I already have an account</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <aside class="info-side">
+      <div class="info-visual">
+        <div class="info-chip">Live parking intelligence</div>
+        <div class="mockup-card">
+          <div class="mockup-top">
+            <span>Accra live map</span>
+            <span class="mockup-dot"></span>
+          </div>
+          <div class="mockup-map"></div>
+          <div class="mockup-stats">
+            <div>
+              <strong>19</strong>
+              <span>tracked spots</span>
+            </div>
+            <div>
+              <strong>10</strong>
+              <span>available now</span>
+            </div>
+            <div>
+              <strong>5s</strong>
+              <span>refresh cycle</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="welcome-message">
+        <h2>Navitron Maps!</h2>
+        <p>Your ultimate guide to parking across Accra, with live availability, wallet payments, and instant directions.</p>
+      </div>
+    </aside>
+  </main>
+
+  <div id="dashboardShell" class="dashboard-shell" hidden>
   <div class="card">
-    <h3>Parking Slots</h3>
-    <button onclick="getSlots()" style="width:auto;padding:8px 16px;margin-bottom:12px">Refresh</button>
+    <div class="card-head">
+      <div>
+        <h3>Parking Slots</h3>
+        <p id="liveMeta" class="subtle-text">Live updates every 5 seconds</p>
+      </div>
+      <button onclick="getSlots({ source: 'manual' })" class="ghost-btn">Refresh</button>
+    </div>
     <ul id="slots"></ul>
   </div>
 
@@ -53,69 +192,96 @@
     <div id="map"></div>
   </div>
 
-  <div class="card" id="walletCard">
+  <div class="card" id="walletCard" hidden>
     <h3>💳 Top Up Wallet</h3>
-    <p style="color:#94a3b8;font-size:14px;margin-top:0">Pay via MTN MoMo, Vodafone Cash, or AirtelTigo Money — funds appear instantly.</p>
+    <p class="helper-text helper-text-tight">Pay via MTN MoMo, Vodafone Cash, or AirtelTigo Money — funds appear instantly.</p>
 
     <!-- Step 1: Mobile Money Details -->
-    <fieldset id="momoStep1" style="border:1px solid #334155;border-radius:8px;padding:14px;margin:0">
-      <legend style="color:#94a3b8;font-size:12px;padding:0 8px;font-weight:700">MOBILE MONEY PAYMENT</legend>
+    <fieldset id="momoStep1" class="payment-fieldset">
+      <legend class="payment-legend">MOBILE MONEY PAYMENT</legend>
       <input id="momoPhone" placeholder="Phone number (e.g. 0551234567)" maxlength="10">
-      <select id="momoProvider" style="width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#0f172a;color:white;font-size:14px">
+      <select id="momoProvider" class="wallet-select" title="Mobile money provider" aria-label="Mobile money provider">
         <option value="mtn">MTN MoMo</option>
         <option value="vod">Vodafone Cash</option>
         <option value="tgo">AirtelTigo Money</option>
       </select>
       <input id="momoAmount" type="number" placeholder="Amount in GHS (min GHS 1)" min="1" max="1000">
-      <button onclick="initiateMoMo()" style="background:linear-gradient(135deg,#22c55e,#0ea5e9)">Pay with Mobile Money</button>
+      <button onclick="updateWallet()" class="momo-pay-btn">Update Wallet</button>
     </fieldset>
 
     <!-- Step 2: OTP Entry (shown after initiation) -->
-    <fieldset id="momoStep2" style="display:none;border:1px solid #f59e0b;border-radius:8px;padding:14px;margin:12px 0 0">
-      <legend style="color:#f59e0b;font-size:12px;padding:0 8px;font-weight:700">ENTER OTP FROM PHONE</legend>
-      <input id="momoOtp" placeholder="OTP code sent to your phone" maxlength="6" style="letter-spacing:4px;font-size:18px;text-align:center">
+    <fieldset id="momoStep2" class="payment-fieldset payment-fieldset-warning payment-fieldset-hidden">
+      <legend class="payment-legend payment-legend-warning">ENTER OTP FROM PHONE</legend>
+      <input id="momoOtp" class="otp-input" placeholder="OTP code sent to your phone" maxlength="6">
       <input id="momoRef" type="hidden">
       <div class="btn-row">
-        <button onclick="submitMoMoOtp()" style="background:#f59e0b;color:#000">Confirm Payment</button>
-        <button onclick="document.getElementById('momoStep2').style.display='none'" style="background:#334155;width:auto;padding:10px 16px">Cancel</button>
+        <button onclick="submitMoMoOtp()" class="warning-btn">Confirm Payment</button>
+        <button onclick="hideOtpStep()" class="secondary-inline-btn" type="button">Cancel</button>
       </div>
     </fieldset>
 
     <!-- Demo top-up (no real payment, for testing) -->
-    <div style="margin-top:14px;border-top:1px solid #334155;padding-top:12px">
-      <p style="color:#64748b;font-size:12px;margin:0 0 6px">⚠️ Demo top-up (no real payment, for testing only):</p>
+    <div class="demo-topup">
+      <p class="demo-note">Demo top-up (no real payment, for testing only):</p>
       <div class="btn-row">
-        <input id="topUpAmount" type="number" placeholder="Amount (GHS)" min="1" max="500" style="flex:1">
-        <button onclick="topUp()" style="width:auto;flex:0 0 auto;padding:10px 16px;background:#334155">+ Demo</button>
+        <input id="topUpAmount" class="input-grow" type="number" placeholder="Amount (GHS)" min="1" max="500">
+        <button onclick="topUp()" class="secondary-inline-btn" type="button">+ Demo</button>
       </div>
     </div>
+
+    <div class="section-split-head">
+      <h4>Payment History</h4>
+      <button class="ghost-btn" type="button" onclick="loadPaymentHistory()">Refresh</button>
+    </div>
+    <div id="retryPaymentWrap" class="retry-payment-wrap">
+      <button type="button" class="ghost-btn" onclick="toggleRetryForm()">🔄 Retry / Verify a payment</button>
+      <div id="retryPaymentForm" class="retry-payment-form" hidden>
+        <input id="retryReference" class="retry-payment-input" placeholder="Paystack reference (e.g. T123456789)">
+        <button type="button" onclick="retryPayment()">Verify & Credit Wallet</button>
+      </div>
+    </div>
+    <ul id="paymentHistoryList" class="bookings-list"></ul>
   </div>
 
-  <div class="card" id="myBookingsCard">
+  <div class="card" id="profileCard" hidden>
+    <h3>👤 Profile</h3>
+    <input id="profileUsername" placeholder="Username">
+    <input id="profileEmail" placeholder="Email address" type="email">
+    <button type="button" onclick="saveProfile()">Save Profile</button>
+  </div>
+
+  <div class="card" id="notificationsCard" hidden>
+    <div class="section-split-head">
+      <h3>🔔 Notifications</h3>
+      <button class="ghost-btn" type="button" onclick="loadNotifications()">Refresh</button>
+    </div>
+    <ul id="notificationsList" class="bookings-list"></ul>
+  </div>
+
+  <div class="card" id="myBookingsCard" hidden>
     <h3>My Bookings</h3>
-    <ul id="myBookingsList" style="list-style:none;padding:0"></ul>
+    <ul id="myBookingsList" class="bookings-list"></ul>
   </div>
 
-  <div class="card" id="addSpotCard">
-    <h3>Add a Parking Spot</h3>
-    <p style="color:#94a3b8;font-size:14px;margin-top:0">Logged-in users can submit new spots.</p>
-    <input id="newLocation" placeholder="Location name (e.g. Accra Mall)">
-    <div class="btn-row">
-      <input id="newLat" placeholder="Latitude (optional)" type="number" step="any" style="flex:1">
-      <input id="newLng" placeholder="Longitude (optional)" type="number" step="any" style="flex:1">
-    </div>
-    <button onclick="submitSpot()">Submit Spot</button>
-  </div>
-
-  <div class="card" id="adminCard">
+  <div class="card" id="adminCard" hidden>
     <h3>Admin Dashboard</h3>
-    <div id="revenueStats" style="background:#0f172a;border-radius:8px;padding:12px;margin-bottom:16px;display:none">
-      <div style="display:flex;gap:20px;flex-wrap:wrap">
-        <div><div style="font-size:12px;color:#94a3b8">Total Revenue</div><div id="revenueTotal" style="font-size:22px;font-weight:bold;color:#22c55e">GHS 0.00</div></div>
-        <div><div style="font-size:12px;color:#94a3b8">Total Bookings</div><div id="revenueBookings" style="font-size:22px;font-weight:bold">0</div></div>
-        <div><div style="font-size:12px;color:#94a3b8">Active Now</div><div id="revenueActive" style="font-size:22px;font-weight:bold;color:#f59e0b">0</div></div>
+    <div id="revenueStats" class="revenue-stats-card" hidden>
+      <div class="revenue-stats-grid">
+        <div><div class="revenue-label">Total Revenue</div><div id="revenueTotal" class="revenue-value revenue-value-money">GHS 0.00</div></div>
+        <div><div class="revenue-label">Total Bookings</div><div id="revenueBookings" class="revenue-value">0</div></div>
+        <div><div class="revenue-label">Active Now</div><div id="revenueActive" class="revenue-value revenue-value-active">0</div></div>
       </div>
     </div>
+
+    <div class="section-split-head">
+      <h4>Analytics</h4>
+      <button class="ghost-btn" type="button" onclick="loadAnalytics()">Refresh</button>
+    </div>
+    <div id="adminAnalyticsList" class="analytics-stats"></div>
+    <div class="analytics-chart-wrap">
+      <canvas id="analyticsChart" height="180"></canvas>
+    </div>
+
     <input id="addLocation" placeholder="New slot location">
     <button onclick="addSlot()">Add Slot</button>
     <input id="adminSlotId" type="number" placeholder="Slot ID to delete / release">
@@ -124,16 +290,49 @@
       <button class="btn-danger" onclick="deleteSlot()">Delete Slot</button>
     </div>
   </div>
+  </div>
 
 </div>
+
+<div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+  <div class="spinner"></div>
+  <span>Updating parking data...</span>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 let token = localStorage.getItem("smart_parking_token") || "";
 let role = localStorage.getItem("smart_parking_role") || "";
+let currentUsername = localStorage.getItem("smart_parking_username") || "";
+let currentEmail = localStorage.getItem("smart_parking_email") || "";
 let balance = 0;
 let userLat = null, userLng = null;
 let userMarker = null;
+let slotsPoller = null;
+let lastSlotsSignature = "";
+let hasLoadedSlotsOnce = false;
+let pendingRequests = 0;
+let slotsRequestInFlight = false;
+
+function setElementHidden(elementId, shouldHide) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  element.hidden = shouldHide;
+}
+
+function hideOtpStep() {
+  const otpStep = document.getElementById("momoStep2");
+  if (!otpStep) return;
+  otpStep.classList.add("payment-fieldset-hidden");
+}
+
+function showOtpStep() {
+  const otpStep = document.getElementById("momoStep2");
+  if (!otpStep) return;
+  otpStep.classList.remove("payment-fieldset-hidden");
+}
 
 // --- Haversine distance (km) ---
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -172,22 +371,96 @@ function showOnMap(slots) {
   slots.forEach((slot, i) => {
     var lat = slot.lat != null ? slot.lat : 5.6037 + i * 0.003;
     var lng = slot.lng != null ? slot.lng : -0.1870 + i * 0.003;
-    var color = slot.status === "free" ? "#22c55e" : "#ef4444";
     var icon = L.divIcon({
-      className: "",
-      html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.5)"></div>`
+      className: "map-pin-wrapper",
+      html: `<div class="map-pin ${slot.status === "free" ? "map-pin-free" : "map-pin-busy"}"></div>`
     });
     var price = slot.price_per_hour ? ` · GHS ${slot.price_per_hour}/hr` : "";
-    L.marker([lat, lng], {icon})
+    var marker = L.marker([lat, lng], {icon})
       .addTo(map)
       .bindPopup(`<b>${slot.location}</b><br>${slot.status}${price}`);
-    markers.push(L.marker([lat, lng]));
+    markers.push(marker);
   });
 }
 
+function formatUtcDate(isoString) {
+  if (!isoString) return null;
+  const normalized = isoString.endsWith("Z") ? isoString : `${isoString}Z`;
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatExpiryLabel(isoString) {
+  const expiresAt = formatUtcDate(isoString);
+  if (!expiresAt) return "";
+  const diffMs = expiresAt.getTime() - Date.now();
+  if (diffMs <= 0) return "Auto-releasing now";
+  const totalMinutes = Math.ceil(diffMs / 60000);
+  return `Auto-releases in ${totalMinutes} min`;
+}
+
+function buildSlotsSignature(slots) {
+  return JSON.stringify(slots.map(slot => ({
+    id: slot.id,
+    status: slot.status,
+    reserved_until: slot.reserved_until || null
+  })));
+}
+
+function showToast(message, type = "info") {
+  if (!message) return;
+  const container = document.getElementById("toastContainer");
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("toast-visible"));
+  setTimeout(() => {
+    toast.classList.remove("toast-visible");
+    setTimeout(() => toast.remove(), 180);
+  }, 2800);
+}
+
+function setBusy(isBusy) {
+  pendingRequests = isBusy ? pendingRequests + 1 : Math.max(0, pendingRequests - 1);
+  document.body.classList.toggle("busy", pendingRequests > 0);
+}
+
+async function fetchJson(url, options = {}, { showLoader = true } = {}) {
+  if (showLoader) setBusy(true);
+  try {
+    const response = await fetch(url, options);
+    const data = await response.json().catch(() => ({}));
+    return { response, data };
+  } finally {
+    if (showLoader) setBusy(false);
+  }
+}
+
+function updateLiveMeta(extra = "") {
+  const stamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const suffix = extra ? ` · ${extra}` : "";
+  document.getElementById("liveMeta").innerText = `Live updates every 5 seconds · Last sync ${stamp}${suffix}`;
+}
+
+function startLiveUpdates() {
+  if (slotsPoller) return;
+  slotsPoller = setInterval(() => {
+    if (!document.hidden) {
+      getSlots({ source: "poll", silent: true });
+      if (token) {
+        loadRealtimeSummary();
+      }
+    }
+  }, 5000);
+}
+
 // --- UI helpers ---
-function setStatus(msg) {
-  document.getElementById("status").innerText = msg;
+function setStatus(msg, type = "info", toast = true) {
+  const statusEl = document.getElementById("status");
+  statusEl.innerText = msg || "";
+  statusEl.className = `status-banner status-${type}`;
+  if (toast && msg) showToast(msg, type);
 }
 
 function setBalance(amount) {
@@ -195,14 +468,53 @@ function setBalance(amount) {
   document.getElementById("balanceDisplay").innerText = "GHS " + amount.toFixed(2);
 }
 
+function setUserIdentity(username = "", email = "") {
+  currentUsername = username || "";
+  currentEmail = email || "";
+  const identityText = currentEmail || currentUsername || "Guest";
+  document.getElementById("userIdentity").innerText = identityText;
+  if (currentUsername) {
+    localStorage.setItem("smart_parking_username", currentUsername);
+  } else {
+    localStorage.removeItem("smart_parking_username");
+  }
+  if (currentEmail) {
+    localStorage.setItem("smart_parking_email", currentEmail);
+  } else {
+    localStorage.removeItem("smart_parking_email");
+  }
+}
+
 function setVisibility() {
-  document.getElementById("adminCard").style.display = role === "admin" ? "block" : "none";
-  document.getElementById("addSpotCard").style.display = token ? "block" : "none";
-  document.getElementById("walletCard").style.display = token ? "block" : "none";
-  document.getElementById("myBookingsCard").style.display = token ? "block" : "none";
-  document.getElementById("walletBadge").style.display = token ? "block" : "none";
-  if (role === "admin") loadRevenue();
-  if (token) { loadBalance(); loadMyBookings(); }
+  const loggedIn = Boolean(token);
+  setElementHidden("authShell", loggedIn);
+  setElementHidden("dashboardShell", !loggedIn);
+  setElementHidden("adminCard", role !== "admin");
+  setElementHidden("walletCard", !loggedIn);
+  setElementHidden("profileCard", !loggedIn);
+  setElementHidden("notificationsCard", !loggedIn);
+  setElementHidden("myBookingsCard", !loggedIn);
+  setElementHidden("userBadge", !loggedIn);
+  setElementHidden("walletBadge", !loggedIn);
+  setElementHidden("logoutBtn", !loggedIn);
+
+  if (role === "admin") {
+    loadRevenue();
+    loadAnalytics();
+  }
+
+  if (loggedIn) {
+    setUserIdentity(currentUsername, currentEmail);
+    loadBalance();
+    loadMyBookings();
+    loadPaymentHistory();
+    loadNotifications();
+    loadRealtimeSummary();
+    hydrateProfileForm();
+  } else {
+    setUserIdentity("", "");
+    hideOtpStep();
+  }
   detectLocation();
 }
 
@@ -213,51 +525,324 @@ function authHeaders() {
 }
 
 // --- Auth ---
-async function registerUser() {
-  const res = await fetch("/auth/register", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username: document.getElementById("regUser").value,
-      password: document.getElementById("regPass").value
-    })
+function setAuthMode(mode) {
+  const loginActive = mode === "login";
+  document.getElementById("loginPanel").classList.toggle("active", loginActive);
+  document.getElementById("registerPanel").classList.toggle("active", !loginActive);
+  document.getElementById("loginTab").classList.toggle("active", loginActive);
+  document.getElementById("registerTab").classList.toggle("active", !loginActive);
+  document.getElementById("loginTab").setAttribute("aria-selected", loginActive ? "true" : "false");
+  document.getElementById("registerTab").setAttribute("aria-selected", loginActive ? "false" : "true");
+  clearAuthErrors();
+}
+
+function clearAuthErrors() {
+  [
+    "loginUsername", "loginPassword",
+    "registerUsername", "registerPassword", "registerConfirmPassword"
+  ].forEach(clearFieldError);
+}
+
+function showFieldError(inputId, message) {
+  const input = document.getElementById(inputId);
+  const error = document.getElementById(`${inputId}-error`);
+  if (!input || !error) return;
+  input.setAttribute("aria-invalid", "true");
+  error.textContent = message;
+  error.classList.add("visible");
+}
+
+function clearFieldError(inputId) {
+  const input = document.getElementById(inputId);
+  const error = document.getElementById(`${inputId}-error`);
+  if (!input || !error) return;
+  input.setAttribute("aria-invalid", "false");
+  error.textContent = "";
+  error.classList.remove("visible");
+}
+
+function setAuthLoading(type, busy, label) {
+  const button = document.getElementById(type === "login" ? "loginSubmit" : "registerSubmit");
+  if (!button) return;
+  button.disabled = busy;
+  button.setAttribute("aria-busy", busy ? "true" : "false");
+  const spinner = button.querySelector(".btn-spinner");
+  const text = button.querySelector(".btn-label");
+  spinner.style.display = busy ? "inline-flex" : "none";
+  text.textContent = busy ? label : (type === "login" ? "Login" : "Create account");
+}
+
+function validateLoginForm() {
+  clearAuthErrors();
+  let valid = true;
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!username) {
+    showFieldError("loginUsername", "Username is required.");
+    valid = false;
+  }
+  if (!password) {
+    showFieldError("loginPassword", "Password is required.");
+    valid = false;
+  }
+  return valid;
+}
+
+function validateRegisterForm() {
+  clearAuthErrors();
+  let valid = true;
+  const username = document.getElementById("registerUsername").value.trim();
+  const password = document.getElementById("registerPassword").value;
+  const confirmPassword = document.getElementById("registerConfirmPassword").value;
+  if (!username) {
+    showFieldError("registerUsername", "Username is required.");
+    valid = false;
+  }
+  if (password.length < 6) {
+    showFieldError("registerPassword", "Use at least 6 characters.");
+    valid = false;
+  }
+  if (confirmPassword !== password) {
+    showFieldError("registerConfirmPassword", "Passwords do not match.");
+    valid = false;
+  }
+  return valid;
+}
+
+function startOAuth(provider) {
+  const allowedProviders = ["google", "apple"];
+  if (!allowedProviders.includes(provider)) {
+    setStatus("Unsupported sign-in provider", "error");
+    return;
+  }
+  window.location.href = `/auth/${provider}/start`;
+}
+
+function resetPassword() {
+  setStatus("Password reset is not connected yet. Use your registered credentials or create a new account.", "info");
+}
+
+function applyAuthenticatedSession(nextToken, nextRole, username = "", email = "") {
+  token = nextToken || "";
+  role = nextRole || "";
+  localStorage.setItem("smart_parking_token", token);
+  localStorage.setItem("smart_parking_role", role);
+  setUserIdentity(username, email);
+  setVisibility();
+}
+
+function clearAuthQueryParams() {
+  const url = new URL(window.location.href);
+  ["auth_token", "auth_role", "auth_username", "auth_email", "oauth_error"].forEach(param => {
+    url.searchParams.delete(param);
   });
-  const data = await res.json();
-  setStatus(data.message || "Registered");
+  window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+}
+
+function handleOAuthRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const oauthError = params.get("oauth_error");
+  const oauthToken = params.get("auth_token");
+  const oauthRole = params.get("auth_role");
+  const oauthUsername = params.get("auth_username") || "";
+  const oauthEmail = params.get("auth_email") || "";
+
+  if (oauthError) {
+    clearAuthQueryParams();
+    setStatus(oauthError.replace(/_/g, " "), "error");
+    return;
+  }
+
+  if (oauthToken) {
+    applyAuthenticatedSession(oauthToken, oauthRole || "user", oauthUsername, oauthEmail);
+    clearAuthQueryParams();
+    setStatus(`Welcome, ${oauthUsername || "driver"} (${oauthRole || "user"})`, "success");
+  }
+}
+
+function logoutUser() {
+  token = "";
+  role = "";
+  balance = 0;
+  currentUsername = "";
+  currentEmail = "";
+  localStorage.removeItem("smart_parking_token");
+  localStorage.removeItem("smart_parking_role");
+  localStorage.removeItem("smart_parking_username");
+  localStorage.removeItem("smart_parking_email");
+  document.getElementById("loginForm").reset();
+  document.getElementById("registerForm").reset();
+  document.getElementById("myBookingsList").innerHTML = "";
+  document.getElementById("notificationsList").innerHTML = "";
+  document.getElementById("paymentHistoryList").innerHTML = "";
+  document.getElementById("adminAnalyticsList").innerHTML = "";
+  if (_analyticsChart) { _analyticsChart.destroy(); _analyticsChart = null; }
+  setBalance(0);
+  hideOtpStep();
+  setAuthMode("login");
+  setVisibility();
+  setStatus("You have been logged out.", "info");
+}
+
+async function registerUser() {
+  if (!validateRegisterForm()) return;
+  setAuthLoading("register", true, "Creating account...");
+  try {
+    const username = document.getElementById("registerUsername").value.trim();
+    const { response, data } = await fetchJson("/auth/register", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        username,
+        password: document.getElementById("registerPassword").value
+      })
+    });
+    setStatus(data.message || "Registered", response.ok ? "success" : "error");
+    if (response.ok) {
+      document.getElementById("registerForm").reset();
+      setAuthMode("login");
+      document.getElementById("loginUsername").value = username;
+    }
+  } finally {
+    setAuthLoading("register", false, "Creating account...");
+  }
 }
 
 async function loginUser() {
-  const res = await fetch("/auth/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username: document.getElementById("logUser").value,
-      password: document.getElementById("logPass").value
-    })
-  });
-  const data = await res.json();
-  token = data.token || "";
-  role = data.role || "";
-  localStorage.setItem("smart_parking_token", token);
-  localStorage.setItem("smart_parking_role", role);
-  if (token) {
-    setStatus("Welcome, " + (data.username || "") + " (" + role + ")");
-    setVisibility();
-  } else {
-    setStatus(data.message || "Login failed");
+  if (!validateLoginForm()) return;
+  setAuthLoading("login", true, "Logging in...");
+  try {
+    const { data } = await fetchJson("/auth/login", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        username: document.getElementById("loginUsername").value.trim(),
+        password: document.getElementById("loginPassword").value
+      })
+    });
+    if (data.token) {
+      applyAuthenticatedSession(data.token, data.role || "", data.username || "", data.email || "");
+      setStatus("Welcome, " + (data.username || "") + " (" + role + ")", "success");
+    } else {
+      setStatus(data.message || "Login failed", "error");
+    }
+  } finally {
+    setAuthLoading("login", false, "Logging in...");
   }
 }
 
 async function loadBalance() {
-  const res = await fetch("/auth/me", {headers: authHeaders()});
-  if (res.ok) {
-    const data = await res.json();
+  const { response, data } = await fetchJson("/auth/me", {headers: authHeaders()}, { showLoader: false });
+  if (response.ok) {
+    setUserIdentity(data.username || "", data.email || "");
     setBalance(data.balance || 0);
   }
 }
 
+function hydrateProfileForm() {
+  const nameInput = document.getElementById("profileUsername");
+  const emailInput = document.getElementById("profileEmail");
+  if (nameInput) nameInput.value = currentUsername || "";
+  if (emailInput) emailInput.value = currentEmail || "";
+}
+
+async function saveProfile() {
+  const username = document.getElementById("profileUsername").value.trim();
+  const email = document.getElementById("profileEmail").value.trim();
+  const { response, data } = await fetchJson("/auth/profile/update", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ username, email })
+  });
+  setStatus(data.message || "Profile updated", response.ok ? "success" : "error");
+  if (response.ok) {
+    setUserIdentity(data.username || username, data.email || email);
+  }
+}
+
+async function loadRealtimeSummary() {
+  const { response, data } = await fetchJson("/realtime/summary", {}, { showLoader: false });
+  if (!response.ok) return;
+  const totals = data.totals || {};
+  updateLiveMeta(`Free ${totals.free ?? 0}/${totals.slots ?? 0} · Active bookings ${totals.active_bookings ?? 0}`);
+}
+
+async function loadPaymentHistory() {
+  if (!token) return;
+  const list = document.getElementById("paymentHistoryList");
+  const { response, data } = await fetchJson("/payments/history", { headers: authHeaders() }, { showLoader: false });
+  if (!response.ok) return;
+  if (!data.length) {
+    list.innerHTML = '<li class="booking-empty">No payment history yet.</li>';
+    return;
+  }
+  list.innerHTML = data.map(item => `
+    <li class="booking-item">
+      <strong>GHS ${item.amount_ghs.toFixed(2)}</strong>
+      <span class="booking-badge booking-badge-active">SUCCESS</span><br>
+      <span class="booking-meta">${item.reference} · ${item.paid_at ? item.paid_at.slice(0,16).replace("T"," ") : ""}</span><br>
+      <button type="button" class="ghost-btn" onclick="loadReceipt('${item.reference}')">View Receipt</button>
+    </li>
+  `).join("");
+}
+
+function toggleRetryForm() {
+  const form = document.getElementById("retryPaymentForm");
+  form.hidden = !form.hidden;
+  if (!form.hidden) document.getElementById("retryReference").focus();
+}
+
+async function retryPayment() {
+  const ref = document.getElementById("retryReference").value.trim();
+  if (!ref) { setStatus("Enter a Paystack reference", "error"); return; }
+  const { response, data } = await fetchJson("/payment/verify", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ reference: ref }),
+  });
+  setStatus(data.message || (response.ok ? "Verified" : "Failed"), response.ok ? "success" : "error");
+  if (response.ok) {
+    document.getElementById("retryPaymentForm").hidden = true;
+    document.getElementById("retryReference").value = "";
+    loadPaymentHistory();
+    loadWallet();
+  }
+}
+
+async function loadReceipt(reference) {
+  const { response, data } = await fetchJson(`/payments/receipt/${encodeURIComponent(reference)}`, { headers: authHeaders() }, { showLoader: false });
+  if (!response.ok) {
+    setStatus(data.message || "Unable to load receipt", "error");
+    return;
+  }
+  const receipt = data.receipt || {};
+  setStatus(`Receipt ${receipt.reference}: GHS ${Number(receipt.amount_ghs || 0).toFixed(2)} (${receipt.status})`, "success");
+}
+
+async function loadNotifications() {
+  if (!token) return;
+  const list = document.getElementById("notificationsList");
+  const { response, data } = await fetchJson("/notifications", { headers: authHeaders() }, { showLoader: false });
+  if (!response.ok) return;
+  const items = data.items || [];
+  if (!items.length) {
+    list.innerHTML = '<li class="booking-empty">No new notifications.</li>';
+    return;
+  }
+  list.innerHTML = items.map(item => `
+    <li class="booking-item">
+      <strong>${item.message}</strong><br>
+      <span class="booking-meta">${item.kind} · ${item.created_at ? item.created_at.slice(0,16).replace("T"," ") : "now"}</span>
+    </li>
+  `).join("");
+}
+
 // --- Mobile Money (Paystack) ---
 let momoReference = "";
+
+function updateWallet() {
+  initiateMoMo();
+}
 
 async function initiateMoMo() {
   if (!token) { setStatus("Please log in first"); return; }
@@ -266,60 +851,57 @@ async function initiateMoMo() {
   const amount = parseFloat(document.getElementById("momoAmount").value);
   if (!phone || phone.length < 10) { setStatus("Enter a valid 10-digit phone number"); return; }
   if (!amount || amount < 1) { setStatus("Enter a valid amount (min GHS 1)"); return; }
-  setStatus("Initiating payment …");
+  setStatus("Initiating payment ...", "info", false);
   try {
-    const res = await fetch("/payment/initiate", {
+    const { response, data } = await fetchJson("/payment/initiate", {
       method: "POST", headers: authHeaders(),
       body: JSON.stringify({ phone, provider, amount })
     });
-    const data = await res.json();
-    if (!res.ok) { setStatus(data.message || "Payment failed"); return; }
+    if (!response.ok) { setStatus(data.message || "Payment failed", "error"); return; }
     if (data.status === "send_otp" || data.status === "send_birthday") {
       momoReference = data.reference;
       document.getElementById("momoRef").value = momoReference;
-      document.getElementById("momoStep2").style.display = "block";
-      setStatus("✅ OTP sent to your phone — enter it below.");
+      showOtpStep();
+      setStatus("OTP sent to your phone — enter it below.", "success");
     } else if (data.status === "success") {
-      setStatus("✅ Payment successful! Updating balance…");
+      setStatus("Payment successful. Updating balance...", "success");
       loadBalance();
     } else {
-      setStatus(data.message || "Status: " + data.status);
+      setStatus(data.message || "Status: " + data.status, "info");
     }
-  } catch(e) { setStatus("Network error: " + e.message); }
+  } catch(e) { setStatus("Network error: " + e.message, "error"); }
 }
 
 async function submitMoMoOtp() {
   const otp = document.getElementById("momoOtp").value.trim();
   const reference = document.getElementById("momoRef").value || momoReference;
   if (!otp) { setStatus("Enter the OTP from your phone"); return; }
-  setStatus("Verifying OTP…");
+  setStatus("Verifying OTP...", "info", false);
   try {
-    const res = await fetch("/payment/submit-otp", {
+    const { data } = await fetchJson("/payment/submit-otp", {
       method: "POST", headers: authHeaders(),
       body: JSON.stringify({ otp, reference })
     });
-    const data = await res.json();
-    setStatus(data.message || "Done");
+    setStatus(data.message || "Done", data.status === "success" ? "success" : "info");
     if (data.status === "success") {
       if (data.balance !== undefined) setBalance(data.balance);
-      document.getElementById("momoStep2").style.display = "none";
+      hideOtpStep();
       document.getElementById("momoOtp").value = "";
       document.getElementById("momoAmount").value = "";
       document.getElementById("momoPhone").value = "";
     }
-  } catch(e) { setStatus("Network error: " + e.message); }
+  } catch(e) { setStatus("Network error: " + e.message, "error"); }
 }
 
 // --- Wallet (Demo top-up) ---
 async function topUp() {
   const amount = parseFloat(document.getElementById("topUpAmount").value);
   if (!amount || amount <= 0) { setStatus("Enter a valid amount"); return; }
-  const res = await fetch("/top-up", {
+  const { data } = await fetchJson("/top-up", {
     method: "POST", headers: authHeaders(),
     body: JSON.stringify({amount})
   });
-  const data = await res.json();
-  setStatus(data.message || "Top up done");
+  setStatus(data.message || "Top up done", "success");
   if (data.balance !== undefined) setBalance(data.balance);
   document.getElementById("topUpAmount").value = "";
 }
@@ -343,8 +925,8 @@ function renderSlots(slots) {
   withDist.forEach(slot => {
     const li = document.createElement("li");
     const isFree = slot.status === "free";
-    const statusColor = isFree ? "#22c55e" : "#ef4444";
     const price = slot.price_per_hour ? `GHS ${slot.price_per_hour}/hr` : "";
+    const expiryLabel = !isFree && slot.reserved_until ? formatExpiryLabel(slot.reserved_until) : "";
     const distLabel = slot.dist !== null
       ? `<span class="dist-badge">${slot.dist < 1 ? (slot.dist*1000).toFixed(0)+"m" : slot.dist.toFixed(1)+"km"}</span>`
       : "";
@@ -359,19 +941,20 @@ function renderSlots(slots) {
         <div>
           <strong>${slot.location}</strong>
           <span class="price-tag">${price}</span>${distLabel}<br>
-          <span style="color:${statusColor};font-size:13px">${slot.status}</span>
+          <span class="slot-status ${isFree ? "slot-status-free" : "slot-status-busy"}">${slot.status}</span>
+          ${expiryLabel ? `<div class="expiry-text">${expiryLabel}</div>` : ""}
           ${dirBtn}
         </div>
         ${isFree ? `
         <div class="book-controls">
-          <select id="hrs_${slot.id}" style="padding:6px;border-radius:6px;border:none;background:#0f172a;color:white">
+          <select id="hrs_${slot.id}" class="hours-select">
             <option value="1">1 hr</option>
             <option value="2">2 hrs</option>
             <option value="3">3 hrs</option>
             <option value="4">4 hrs</option>
             <option value="8">8 hrs</option>
           </select>
-          <button onclick="book(${slot.id}, ${slot.price_per_hour})" style="width:auto;padding:8px 14px">Book</button>
+          <button type="button" class="book-btn" onclick="book(${slot.id}, ${slot.price_per_hour})">Book</button>
         </div>` : ""}
       </div>
     `;
@@ -379,11 +962,31 @@ function renderSlots(slots) {
   });
 }
 
-async function getSlots() {
-  const res = await fetch("/slots");
-  const data = await res.json();
-  renderSlots(data);
-  showOnMap(data);
+async function getSlots({ source = "manual", silent = false } = {}) {
+  if (slotsRequestInFlight) return;
+  slotsRequestInFlight = true;
+  try {
+    const { response, data } = await fetchJson("/slots", {}, { showLoader: source !== "poll" });
+    if (!response.ok) {
+      if (!silent) setStatus("Unable to refresh parking slots", "error");
+      return;
+    }
+
+    const nextSignature = buildSlotsSignature(data);
+    if (hasLoadedSlotsOnce && source === "poll" && nextSignature !== lastSlotsSignature) {
+      showToast("Live update: parking availability changed", "info");
+      if (token) loadMyBookings();
+      if (role === "admin") loadRevenue();
+    }
+
+    lastSlotsSignature = nextSignature;
+    hasLoadedSlotsOnce = true;
+    renderSlots(data);
+    showOnMap(data);
+    updateLiveMeta();
+  } finally {
+    slotsRequestInFlight = false;
+  }
 }
 
 async function book(id, pricePerHour) {
@@ -395,96 +998,183 @@ async function book(id, pricePerHour) {
     setStatus(`Need GHS ${cost.toFixed(2)} — top up your wallet first!`);
     return;
   }
-  const res = await fetch("/book", {
+  const { response, data } = await fetchJson("/book", {
     method: "POST", headers: authHeaders(),
     body: JSON.stringify({id, hours})
   });
-  const data = await res.json();
-  setStatus(data.message || "Booked");
+  setStatus(data.message || "Booked", response.ok ? "success" : "error");
   if (data.balance_remaining !== undefined) setBalance(data.balance_remaining);
-  getSlots();
+  getSlots({ source: "manual" });
   loadMyBookings();
 }
 
 // --- My Bookings ---
 async function loadMyBookings() {
   if (!token) return;
-  const res = await fetch("/my-bookings", {headers: authHeaders()});
-  if (!res.ok) return;
-  const bookings = await res.json();
+  const { response, data: bookings } = await fetchJson("/my-bookings", {headers: authHeaders()}, { showLoader: false });
+  if (!response.ok) return;
   const list = document.getElementById("myBookingsList");
-  if (!bookings.length) { list.innerHTML = "<li style='color:#94a3b8'>No bookings yet.</li>"; return; }
+  if (!bookings.length) {
+    list.innerHTML = '<li class="booking-empty">No bookings yet.</li>';
+    return;
+  }
   list.innerHTML = bookings.map(b => {
     const badge = b.status === "active"
-      ? `<span style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:999px;font-size:11px">ACTIVE</span>`
-      : `<span style="background:#334155;color:#94a3b8;padding:2px 8px;border-radius:999px;font-size:11px">done</span>`;
-    return `<li style="padding:8px 0;border-bottom:1px solid #1e293b">
+      ? '<span class="booking-badge booking-badge-active">ACTIVE</span>'
+      : `<span class="booking-badge booking-badge-muted">${b.status}</span>`;
+    const expiry = b.expires_at ? ` · ${formatExpiryLabel(b.expires_at)}` : "";
+    const actions = b.status === "active"
+      ? `<div class="booking-actions">
+          <button type="button" class="ghost-btn" onclick="extendBooking(${b.id})">+1h</button>
+          <button type="button" class="secondary-inline-btn" onclick="cancelBooking(${b.id})">Cancel</button>
+        </div>`
+      : "";
+    return `<li class="booking-item">
       <strong>${b.location}</strong> ${badge}<br>
-      <span style="color:#94a3b8;font-size:13px">${b.hours}hr · GHS ${b.amount.toFixed(2)} · ${b.booked_at ? b.booked_at.slice(0,16).replace("T"," ") : ""}</span>
+      <span class="booking-meta">${b.hours}hr · GHS ${b.amount.toFixed(2)} · ${b.booked_at ? b.booked_at.slice(0,16).replace("T"," ") : ""}${expiry}</span>
+      ${actions}
     </li>`;
   }).join("");
 }
 
-// --- Add spot ---
-async function submitSpot() {
-  const location = document.getElementById("newLocation").value.trim();
-  if (!location) { setStatus("Please enter a location name"); return; }
-  const lat = document.getElementById("newLat").value;
-  const lng = document.getElementById("newLng").value;
-  const body = {location};
-  if (lat) body.lat = parseFloat(lat);
-  if (lng) body.lng = parseFloat(lng);
-  const res = await fetch("/add-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify(body)});
-  const data = await res.json();
-  setStatus(data.message || "Spot submitted");
-  document.getElementById("newLocation").value = "";
-  document.getElementById("newLat").value = "";
-  document.getElementById("newLng").value = "";
-  getSlots();
+async function cancelBooking(bookingId) {
+  const { response, data } = await fetchJson("/bookings/cancel", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ booking_id: bookingId })
+  });
+  setStatus(data.message || "Booking updated", response.ok ? "success" : "error");
+  if (response.ok) {
+    if (data.balance !== undefined) setBalance(data.balance);
+    loadMyBookings();
+    getSlots({ source: "manual", silent: true });
+    loadNotifications();
+  }
+}
+
+async function extendBooking(bookingId) {
+  const { response, data } = await fetchJson("/bookings/extend", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ booking_id: bookingId, extra_hours: 1 })
+  });
+  setStatus(data.message || "Booking updated", response.ok ? "success" : "error");
+  if (response.ok) {
+    if (data.balance !== undefined) setBalance(data.balance);
+    loadMyBookings();
+    loadNotifications();
+  }
 }
 
 // --- Admin actions ---
 async function loadRevenue() {
-  const res = await fetch("/admin/revenue", {headers: authHeaders()});
-  if (!res.ok) return;
-  const data = await res.json();
-  document.getElementById("revenueStats").style.display = "block";
+  const { response, data } = await fetchJson("/admin/revenue", {headers: authHeaders()}, { showLoader: false });
+  if (!response.ok) return;
+  setElementHidden("revenueStats", false);
   document.getElementById("revenueTotal").innerText = "GHS " + data.total_revenue_ghs.toFixed(2);
   document.getElementById("revenueBookings").innerText = data.total_bookings;
   document.getElementById("revenueActive").innerText = data.active_bookings;
 }
 
+let _analyticsChart = null;
+async function loadAnalytics() {
+  if (role !== "admin") return;
+  const statsEl = document.getElementById("adminAnalyticsList");
+  const { response, data } = await fetchJson("/admin/analytics", {headers: authHeaders()}, { showLoader: false });
+  if (!response.ok) return;
+  const totals = data.totals || {};
+  statsEl.innerHTML = `
+    <div class="analytics-meta-row">
+      <span class="booking-meta"><strong>Free</strong> ${totals.free_slots || 0} / ${(totals.free_slots || 0) + (totals.occupied_slots || 0)}</span>
+      <span class="booking-meta"><strong>Occupied</strong> ${totals.occupied_slots || 0}</span>
+      <span class="booking-meta"><strong>Bookings</strong> ${totals.bookings || 0}</span>
+    </div>
+  `;
+
+  const daily = data.daily_revenue || [];
+  const labels = daily.map(d => d.date ? d.date.slice(5) : "");
+  const values = daily.map(d => Number(d.revenue || 0));
+  const ctx = document.getElementById("analyticsChart").getContext("2d");
+  if (_analyticsChart) { _analyticsChart.destroy(); }
+  _analyticsChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Revenue (GHS)",
+        data: values,
+        backgroundColor: "rgba(99,102,241,0.7)",
+        borderColor: "rgba(99,102,241,1)",
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => "GHS " + v } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
 async function addSlot() {
   const location = document.getElementById("addLocation").value.trim();
   if (!location) { setStatus("Enter a location"); return; }
-  const res = await fetch("/admin/add-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({location})});
-  const data = await res.json();
-  setStatus(data.message || "Slot added");
+  const { response, data } = await fetchJson("/admin/add-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({location})});
+  setStatus(data.message || "Slot added", response.ok ? "success" : "error");
   document.getElementById("addLocation").value = "";
-  getSlots();
+  getSlots({ source: "manual" });
 }
 
 async function releaseSlot() {
   const id = Number(document.getElementById("adminSlotId").value);
-  const res = await fetch("/release-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({id})});
-  const data = await res.json();
-  setStatus(data.message || "Released");
-  getSlots();
+  const { response, data } = await fetchJson("/release-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({id})});
+  setStatus(data.message || "Released", response.ok ? "success" : "error");
+  getSlots({ source: "manual" });
   loadRevenue();
 }
 
 async function deleteSlot() {
   const id = Number(document.getElementById("adminSlotId").value);
-  const res = await fetch("/admin/delete-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({id})});
-  const data = await res.json();
-  setStatus(data.message || "Deleted");
-  getSlots();
+  const { response, data } = await fetchJson("/admin/delete-slot", {method: "POST", headers: authHeaders(), body: JSON.stringify({id})});
+  setStatus(data.message || "Deleted", response.ok ? "success" : "error");
+  getSlots({ source: "manual" });
 }
 
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    getSlots({ source: "focus", silent: true });
+  }
+});
+
+document.getElementById("loginForm").addEventListener("submit", event => {
+  event.preventDefault();
+  loginUser();
+});
+
+document.getElementById("registerForm").addEventListener("submit", event => {
+  event.preventDefault();
+  registerUser();
+});
+
+["loginUsername", "loginPassword", "registerUsername", "registerPassword", "registerConfirmPassword"].forEach(id => {
+  const input = document.getElementById(id);
+  if (input) {
+    input.addEventListener("blur", () => clearFieldError(id));
+  }
+});
+
+startLiveUpdates();
+setAuthMode("login");
+handleOAuthRedirect();
 setVisibility();
-getSlots();
+getSlots({ source: "manual" });
 detectLocation();
 </script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </body>
 </html>
